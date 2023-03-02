@@ -6,6 +6,7 @@
 /generated/
 /run/
 gradle*
+input.txt
 
 # Class files
 **/*.class
