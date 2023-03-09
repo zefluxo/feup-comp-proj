@@ -13,54 +13,62 @@ program
     : (importDeclaration)* classDeclaration EOF
     ;
 
+moduleDeclaration
+    : modName=ID
+    ;
+
 importDeclaration
-    : 'import' ID ('.' ID)* ';'
+    : 'import' moduleDeclaration ('.' moduleDeclaration)* ';'
     ;
 
 classDeclaration
-    : 'class' ID ('extends' ID)? '{' (varDeclaration)* (methodDeclaration)* '}'
+    : 'class' className=ID ('extends' interfaceName=ID)? '{' (varDeclaration)* (methodDeclaration)* '}'
     ;
 
 varDeclaration
-    : type ID ';'
+    : type varName=ID ';'
+    ;
+
+argumentDeclaration
+    : type varName=ID
     ;
 
 methodDeclaration
-    : ('public')? type ID '(' (type ID (',' type ID)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}'
-    | ('public')? 'static' 'void' 'main' '(' type '[' ']' ID ')' '{' (varDeclaration)* '}'
+    : ('public')? type methodName=ID '(' (argumentDeclaration (',' argumentDeclaration)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}' #FuncDeclaration
+    | ('public')? 'static' 'void' 'main' '(' type '[' ']' ID ')' '{' (varDeclaration)* '}' #MainFuncDeclaration
     ;
 
 type
-    : 'int' '[' ']'
-    | 'boolean'
-    | 'int'
-    | ID
+    : 'int' '[' ']' #IntArray
+    | 'boolean' #BoolType
+    | 'int' #IntType
+    | typeName=ID #TypeName
     ;
 
 statement
-    : '{' (statement)* '}'
-    | 'if' '(' expression ')' statement 'else' statement
-    | 'while' '(' expression ')' statement
-    | expression ';'
-    | ID '=' expression ';'
-    | ID '[' expression ']' '=' expression ';'
+    : '{' (statement)* '}' #MethodStatement
+    | 'if' '(' expression ')' statement 'else' statement #IfStatement
+    | 'while' '(' expression ')' statement #WhileStatement
+    | expression ';' #Expr
+    | varName=ID '=' expression ';' #Assignment
+    | varName=ID '[' expression ']' '=' expression ';' #ArrayAssignment
     ;
 
 expression
-    : expression op=('*' | '/') expression
-    | expression op=('+' | '-') expression
-    | expression op='<' expression
-    | expression op='&&' expression
-    | expression '[' expression ']'
-    | expression '.' 'length'
-    | expression '.' ID '(' (expression (',' expression)*)? ')'
-    | 'new' 'int' '[' expression ']'
-    | 'new' ID '(' ')'
-    | '!' expression
-    | '(' expression ')'
-    | INTEGER
-    | 'true'
-    | 'false'
-    | ID
-    | 'this'
+    : expression op=('*' | '/') expression #BinaryOp
+    | expression op=('+' | '-') expression #BinaryOp
+    | expression op='<' expression #BinaryOp
+    | expression op='&&' expression #BinaryOp
+    | expression '[' expression ']' #ArrayAccess
+    | expression '.' 'length' #LengthOp
+    | expression '.' methodName=ID '(' (expression (',' expression)*)? ')' #ClassMethodCall
+    | 'new' 'int' '[' expression ']' #ArrayDeclaration
+    | 'new' objName=ID '(' ')' #ObjectDeclaration
+    | '!' expression #NotOp
+    | '(' expression ')' #ParenthessOp
+    | val=INTEGER #Integer
+    | 'true' #Boolean
+    | 'false' #Boolean
+    | varName=ID #Identifier
+    | 'this' #ObjIdentifier
     ;
