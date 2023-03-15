@@ -1,10 +1,13 @@
 package pt.up.fe.comp2023;
 
+
+import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,6 +18,8 @@ public class SimpleSymbolTable implements SymbolTable{
     private String className;
     private String superClassName;
     private List<Method> methods;
+    private List<Symbol> fields;
+
 
     public SimpleSymbolTable(JmmNode node) {
         this.rootNode = node;
@@ -31,15 +36,20 @@ public class SimpleSymbolTable implements SymbolTable{
     }
 
     private void readClass() {
-        ClassVisitor visitor = new ClassVisitor();
-        String result = visitor.visit(this.rootNode);
 
-        if (result.indexOf('/') != -1) {
-            this.className = result.substring(0, result.indexOf('/'));
-            this.superClassName = result.substring(result.indexOf('/') + 1, result.length());
-        } else {
-            this.className = result;
+        ClassVisitor visitor = new ClassVisitor();
+        Pair<List<String>, List<Symbol>> result = visitor.visit(this.rootNode);
+
+        List<String> classInfo = result.a;
+        List<Symbol> fields = result.b;
+
+        this.className = classInfo.get(0);
+        if (classInfo.size() == 2) {
+            this.superClassName = classInfo.get(1);
         }
+
+        this.fields = fields;
+
     }
 
     private void readMethods() {
@@ -65,32 +75,43 @@ public class SimpleSymbolTable implements SymbolTable{
 
     @Override
     public List<Symbol> getFields() {
-        return null;
-    }
-
-    // TODO: Find a better way to do this
-    public List<Method> myGetMethods() {
-        return this.methods;
+        return this.fields;
     }
 
     @Override
     public List<String> getMethods() {
-        return null;
-    }
+        List<String> methodNames = new ArrayList<>();
+        for (Method method: this.methods) {
+            methodNames.add(method.getMethodName());
+        }
 
+        return methodNames;
+    }
 
     @Override
     public Type getReturnType(String s) {
+        for (Method method: this.methods) {
+            if (method.getMethodName().equals(s)) return method.getReturnType();
+        }
+
         return null;
     }
 
     @Override
     public List<Symbol> getParameters(String s) {
+        for (Method method: this.methods) {
+            if (method.getMethodName().equals(s)) return method.getArguments();
+        }
+
         return null;
     }
 
     @Override
     public List<Symbol> getLocalVariables(String s) {
+        for (Method method: this.methods) {
+            if (method.getMethodName().equals(s)) return method.getLocalVariables();
+        }
+
         return null;
     }
 }

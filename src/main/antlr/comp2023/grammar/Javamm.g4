@@ -35,14 +35,14 @@ argumentDeclaration
 
 methodDeclaration
     : ('public')? retType=type methodName=ID '(' (argumentDeclaration (',' argumentDeclaration)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}' #FuncDeclaration
-    | ('public')? 'static' 'void' 'main' '(' type '[' ']' ID ')' '{' (varDeclaration)* '}' #MainFuncDeclaration
+    | ('public')? 'static' 'void' 'main' '(' argsType=type '[' ']' argsName=ID ')' '{' (varDeclaration)* '}' #MainFuncDeclaration
     ;
 
 type
     : 'int' '[' ']' #IntArray
     | 'boolean' #BoolType
     | 'int' #IntType
-    | typeName=ID #TypeName
+    | typeName=ID (isArray='[' ']')? #TypeName
     ;
 
 statement

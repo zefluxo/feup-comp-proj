@@ -1,9 +1,10 @@
 package pt.up.fe.comp2023;
 
+import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
-public class TypeVisitor extends AJmmVisitor<String, String> {
+public class TypeVisitor extends AJmmVisitor<String, Type> {
 
     // TODO: Probably a better way to do this
     @Override
@@ -14,19 +15,23 @@ public class TypeVisitor extends AJmmVisitor<String, String> {
         addVisit("TypeName", this::dealWithType);
     }
 
-    private String dealWithIntArray(JmmNode node, String s) {
-        return "IntArray";
+    private Type dealWithIntArray(JmmNode node, String s) {
+        return new Type("int", true);
     }
 
-    private String dealWithInt(JmmNode node, String s) {
-        return "Integer";
+    private Type dealWithInt(JmmNode node, String s) {
+        return new Type("int", false);
     }
 
-    private String dealWithBool(JmmNode node, String s) {
-        return "Boolean";
+    private Type dealWithBool(JmmNode node, String s) {
+        return new Type("boolean", false);
     }
 
-    private String dealWithType(JmmNode node, String s) {
-        return node.get("typeName");
+    private Type dealWithType(JmmNode node, String s) {
+        if (node.hasAttribute("isArray")) {
+            return new Type(node.get("typeName"), true);
+        }
+
+        return new Type(node.get("typeName"), false);
     }
 }

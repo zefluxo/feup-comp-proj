@@ -5,6 +5,7 @@ import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,26 +31,55 @@ public class MethodVisitor extends AJmmVisitor<String, List<Method>> {
     private List<Method> dealWithClass(JmmNode node, String s) {
         List<Method> ret = new ArrayList<>();
 
-        // TODO: Check how to elegantly verify if an argument is an array
+        TypeVisitor visitor = new TypeVisitor();
         for (JmmNode child: node.getChildren()) {
-            TypeVisitor visitor = new TypeVisitor();
             if (child.getKind().equals("FuncDeclaration")) {
-                String retType = visitor.visit(child.getJmmChild(0));
-                Type returnType = new Type(retType, false);
+                Type returnType = visitor.visit(child.getJmmChild(0));
 
                 String methodName = child.get("methodName");
                 List<Symbol> arguments = new ArrayList<>();
+                List<Symbol> localVariables = new ArrayList<>();
 
                 for (JmmNode newChild: child.getChildren()) {
-                    if (newChild.getKind().equals("ArgumentDeclaration")) {
-                        String typeName = visitor.visit(newChild.getJmmChild(0));
 
-                        Type type = new Type(typeName, false);
+                    if (newChild.getKind().equals("ArgumentDeclaration")) {
+                        Type type = visitor.visit(newChild.getJmmChild(0));
                         arguments.add(new Symbol(type, newChild.get("varName")));
+                        continue;
                     }
+
+                    if (newChild.getKind().equals("VarDeclaration")) {
+                        Type type = visitor.visit(newChild.getJmmChild(0));
+                        localVariables.add(new Symbol(type, newChild.get("varName")));
+                    }
+
                 }
 
-                ret.add(new Method(methodName, returnType, arguments));
+                ret.add(new Method(methodName, returnType, arguments, localVariables));
+
+            } else if (child.getKind().equals("MainFuncDeclaration")) {
+
+                String methodName = "main";
+                List<Symbol> arguments = new ArrayList<>();
+                List<Symbol> localVariables = new ArrayList<>();
+
+                Type argsType = new Type(visitor.visit(child.getJmmChild(0)).getName(), true);
+                Type retType = new Type("null", false);
+                String argsName = child.get("argsName");
+
+                arguments.add(new Symbol(argsType, argsName));
+
+                for (JmmNode newChild: child.getChildren()) {
+
+                    if (newChild.getKind().equals("VarDeclaration")) {
+                        Type type = visitor.visit(newChild.getJmmChild(0));
+                        localVariables.add(new Symbol(type, newChild.get("varName")));
+                    }
+
+                }
+
+                ret.add(new Method(methodName, retType, arguments, localVariables));
+
             }
         }
 
