@@ -4,6 +4,12 @@ grammar Javamm;
     package pt.up.fe.comp2023;
 }
 
+@lexer::members {
+    public static final int WHITESPACE = 1;
+    public static final int COMMENTS = 2;
+}
+
+
 INTEGER : ( [0] | [1-9]([0-9])* ) ;
 ID : [a-zA-Z_$][a-zA-Z_$0-9]* ;
 
@@ -71,4 +77,12 @@ expression
     | 'false' #Boolean
     | varName=ID #Identifier
     | 'this' #ObjIdentifier
+    ;
+
+COMMENT
+    : '/*' .*? '*/' -> channel(COMMENTS)
+    ;
+
+LINE_COMMENT
+    : '//' ~[\r\n]* -> channel(COMMENTS)
     ;
