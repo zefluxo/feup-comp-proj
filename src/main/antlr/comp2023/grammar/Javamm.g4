@@ -4,7 +4,7 @@ grammar Javamm;
     package pt.up.fe.comp2023;
 }
 
-INTEGER : [0-9]+ ;
+INTEGER : ( [0] | [1-9]([0-9])* ) ;
 ID : [a-zA-Z_][a-zA-Z_0-9]* ;
 
 WS : [ \t\n\r\f]+ -> skip ;
@@ -26,11 +26,11 @@ classDeclaration
     ;
 
 varDeclaration
-    : varType=type varName=ID ';'
+    : type varName=ID ';'
     ;
 
 argumentDeclaration
-    : argType=type varName=ID
+    : type varName=ID
     ;
 
 methodDeclaration
@@ -50,18 +50,18 @@ statement
     | 'if' '(' expression ')' statement 'else' statement #IfStatement
     | 'while' '(' expression ')' statement #WhileStatement
     | expression ';' #Expr
-    | varName=ID '=' value=expression ';' #Assignment
-    | varName=ID '[' arrSize=expression ']' '=' array=expression ';' #ArrayAssignment
+    | varName=ID '=' expression ';' #Assignment
+    | varName=ID '[' expression ']' '=' expression ';' #ArrayAssignment
     ;
 
 expression
-    : arg1=expression op=('*' | '/') arg2=expression #BinaryOp
-    | arg1=expression op=('+' | '-') arg2=expression #BinaryOp
-    | arg1=expression op='<' arg2=expression #BinaryOp
-    | arg1=expression op='&&' arg2=expression #BinaryOp
-    | arg1=expression op='||' arg2=expression #BinaryOp
-    | arg1=expression op='==' arg2=expression #BinaryOp
-    | arr=expression '[' index=expression ']' #ArrayAccess
+    : expression op=('*' | '/') expression #BinaryOp
+    | expression op=('+' | '-') expression #BinaryOp
+    | expression op='<' expression #BinaryOp
+    | expression op='&&' expression #BinaryOp
+    | expression op='||' expression #BinaryOp
+    | expression op='==' expression #BinaryOp
+    | expression '[' expression ']' #ArrayAccess
     | expression '.' 'length' #LengthOp
     | expression '.' methodName=ID '(' (expression (',' expression)*)? ')' #ClassMethodCall
     | 'new' 'int' '[' expression ']' #ArrayDeclaration
