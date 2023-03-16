@@ -36,12 +36,19 @@ public class Launcher {
 
         // Parse stage
         JmmParserResult parserResult = parser.parse(code, config);
-        System.out.println(parserResult.getRootNode().toTree());
 
         // Check if there are parsing errors
-        TestUtils.noErrors(parserResult.getReports());
+        try {
+            TestUtils.noErrors(parserResult.getReports());
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+            System.exit(-1);
+        }
+
+        System.out.println(parserResult.getRootNode());
 
         SimpleSymbolTable symbolTable = new SimpleSymbolTable(parserResult.getRootNode());
+        System.out.println(symbolTable.print());
         // ... add remaining stages
     }
 

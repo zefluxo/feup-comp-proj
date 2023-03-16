@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class SimpleSymbolTable implements SymbolTable{
+public class SimpleSymbolTable implements SymbolTable {
 
     private JmmNode rootNode;
     private List<String> imports;
@@ -44,6 +44,7 @@ public class SimpleSymbolTable implements SymbolTable{
         List<Symbol> fields = result.b;
 
         this.className = classInfo.get(0);
+        this.superClassName = "null";
         if (classInfo.size() == 2) {
             this.superClassName = classInfo.get(1);
         }
@@ -114,4 +115,6 @@ public class SimpleSymbolTable implements SymbolTable{
 
         return null;
     }
+
+
 }
