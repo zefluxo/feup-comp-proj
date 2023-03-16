@@ -34,8 +34,8 @@ argumentDeclaration
     ;
 
 methodDeclaration
-    : ('public')? retType=type methodName=ID '(' (argumentDeclaration (',' argumentDeclaration)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}' #FuncDeclaration
-    | ('public')? 'static' 'void' 'main' '(' argsType=type '[' ']' argsName=ID ')' '{' (varDeclaration)* '}' #MainFuncDeclaration
+    : ('public')? type methodName=ID '(' (argumentDeclaration (',' argumentDeclaration)*)? ')' '{' (varDeclaration)* (statement)* 'return' expression ';' '}' #FuncDeclaration
+    | ('public')? 'static' 'void' 'main' '(' type '[' ']' argsName=ID ')' '{' (varDeclaration)* (statement)* '}' #MainFuncDeclaration
     ;
 
 type
