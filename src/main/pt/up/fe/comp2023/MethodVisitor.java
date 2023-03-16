@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MethodVisitor extends AJmmVisitor<String, List<Method>> {
+
     @Override
     protected void buildVisitor() {
         addVisit("Program", this::dealWithRoot);
@@ -17,7 +18,7 @@ public class MethodVisitor extends AJmmVisitor<String, List<Method>> {
     }
 
     private List<Method> dealWithRoot(JmmNode node, String s) {
-        List<Method> ret = new ArrayList<Method>();
+        List<Method> ret = new ArrayList<>();
 
         for (JmmNode child: node.getChildren()) {
             if (child.getKind().equals("ClassDeclaration")) {

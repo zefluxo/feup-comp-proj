@@ -5,7 +5,7 @@ grammar Javamm;
 }
 
 INTEGER : ( [0] | [1-9]([0-9])* ) ;
-ID : [a-zA-Z_][a-zA-Z_0-9]* ;
+ID : [a-zA-Z_$][a-zA-Z_$0-9]* ;
 
 WS : [ \t\n\r\f]+ -> skip ;
 
@@ -47,7 +47,7 @@ type
 
 statement
     : '{' (statement)* '}' #MethodStatement
-    | 'if' '(' expression ')' statement 'else' statement #IfStatement
+    | 'if' '(' expression ')' statement ('else' statement)? #IfStatement
     | 'while' '(' expression ')' statement #WhileStatement
     | expression ';' #Expr
     | varName=ID '=' expression ';' #Assignment
@@ -55,19 +55,17 @@ statement
     ;
 
 expression
-    : expression op=('*' | '/') expression #BinaryOp
+    : '(' expression ')' #ParenthesesOp
+    | expression '[' expression ']' #ArrayAccess
+    | expression '.' methodName=ID '(' (expression (',' expression)*)? ')' #ClassMethodCall
+    | expression '.' 'length' #LengthOp
+    | '!' expression #NotOp
+    | 'new' objName=ID '(' ')' #ObjectDeclaration
+    | 'new' 'int' '[' expression ']' #ArrayDeclaration
+    | expression op=('*' | '/') expression #BinaryOp
     | expression op=('+' | '-') expression #BinaryOp
     | expression op='<' expression #BinaryOp
     | expression op='&&' expression #BinaryOp
-    | expression op='||' expression #BinaryOp
-    | expression op='==' expression #BinaryOp
-    | expression '[' expression ']' #ArrayAccess
-    | expression '.' 'length' #LengthOp
-    | expression '.' methodName=ID '(' (expression (',' expression)*)? ')' #ClassMethodCall
-    | 'new' 'int' '[' expression ']' #ArrayDeclaration
-    | 'new' objName=ID '(' ')' #ObjectDeclaration
-    | '!' expression #NotOp
-    | '(' expression ')' #ParenthesesOp
     | val=INTEGER #Integer
     | 'true' #Boolean
     | 'false' #Boolean
