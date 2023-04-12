@@ -6,6 +6,10 @@ import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2023.entities.Method;
+import pt.up.fe.comp2023.visitors.symbolTable.ClassVisitor;
+import pt.up.fe.comp2023.visitors.symbolTable.ImportVisitor;
+import pt.up.fe.comp2023.visitors.symbolTable.MethodVisitor;
 
 import java.util.ArrayList;
 import java.util.Arrays;

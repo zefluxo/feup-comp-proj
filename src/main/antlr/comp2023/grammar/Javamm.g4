@@ -40,7 +40,7 @@ argumentDeclaration
     ;
 
 methodDeclaration
-    : ('public')? type methodName=ID '(' (argumentDeclaration (',' argumentDeclaration)*)? ')' '{'((varDeclaration) | (statement))* 'return' expression ';' '}' #FuncDeclaration
+    : ('public')? (isStatic='static')? type methodName=ID '(' (argumentDeclaration (',' argumentDeclaration)*)? ')' '{'((varDeclaration) | (statement))* 'return' expression ';' '}' #FuncDeclaration
     | ('public')? 'static' 'void' 'main' '(' type '[' ']' argsName=ID ')' '{' ((varDeclaration) | (statement))* '}' #MainFuncDeclaration
     ;
 
