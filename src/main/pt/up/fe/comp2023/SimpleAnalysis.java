@@ -5,9 +5,6 @@ import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp.jmm.report.Report;
 
-import pt.up.fe.comp2023.analysers.FunctionAnalyser;
-import pt.up.fe.comp2023.analysers.TypeAnalyser;
-
 import java.util.List;
 
 public class SimpleAnalysis implements JmmAnalysis {
