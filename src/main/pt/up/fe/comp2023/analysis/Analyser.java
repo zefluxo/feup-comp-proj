@@ -267,7 +267,7 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
 
             }
 
-            jmmNode.put("type", className);
+            jmmNode.put("type", calledMethod.getReturnType().getName());
             jmmNode.put("isArray", "false");
             return reports;
         }
@@ -620,7 +620,6 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
 
             Type returnType = currMethod.getReturnType();
             JmmNode returnNode = jmmNode.getJmmChild(jmmNode.getChildren().size() - 1);
-            visit(returnNode, symbolTable);
 
             Type returnExprType = getType(returnNode, symbolTable);
 
