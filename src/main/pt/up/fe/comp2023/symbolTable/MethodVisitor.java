@@ -1,10 +1,10 @@
-package pt.up.fe.comp2023.visitors.symbolTable;
+package pt.up.fe.comp2023.symbolTable;
 
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2023.entities.Method;
+import pt.up.fe.comp2023.symbolTable.entities.Method;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +56,7 @@ public class MethodVisitor extends AJmmVisitor<String, List<Method>> {
 
                 }
 
-                ret.add(new Method(methodName, returnType, arguments, localVariables));
+                ret.add(new Method(child.hasAttribute("isStatic"), methodName, returnType, arguments, localVariables));
 
             } else if (child.getKind().equals("MainFuncDeclaration")) {
 
@@ -79,7 +79,7 @@ public class MethodVisitor extends AJmmVisitor<String, List<Method>> {
 
                 }
 
-                ret.add(new Method(methodName, retType, arguments, localVariables));
+                ret.add(new Method(true, methodName, retType, arguments, localVariables));
 
             }
         }

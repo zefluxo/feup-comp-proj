@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
+import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
+import pt.up.fe.comp2023.analysis.Analyser;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -41,14 +43,24 @@ public class Launcher {
         try {
             TestUtils.noErrors(parserResult.getReports());
         } catch (RuntimeException e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             System.exit(-1);
         }
 
-        System.out.println(parserResult.getRootNode());
+        System.out.println(parserResult.getRootNode().toTree());
 
         SimpleSymbolTable symbolTable = new SimpleSymbolTable(parserResult.getRootNode());
         System.out.println(symbolTable.print());
+
+        SimpleAnalysis analysis = new SimpleAnalysis();
+        JmmSemanticsResult semanticsResult = analysis.semanticAnalysis(parserResult);
+
+        try {
+            TestUtils.noErrors(semanticsResult.getReports());
+        } catch (RuntimeException e) {
+            System.err.println(e.getMessage());
+            System.exit(-1);
+        }
         // ... add remaining stages
     }
 

@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023.visitors.symbolTable;
+package pt.up.fe.comp2023.symbolTable;
 
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;

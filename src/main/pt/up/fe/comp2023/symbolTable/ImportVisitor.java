@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023.visitors.symbolTable;
+package pt.up.fe.comp2023.symbolTable;
 
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
@@ -14,24 +14,24 @@ public class ImportVisitor extends AJmmVisitor<String, String> {
     }
 
     private String dealWithRoot(JmmNode node, String a) {
-        String allImports = "";
+        StringBuilder allImports = new StringBuilder();
 
         for (JmmNode child: node.getChildren()) {
             if (child.getKind().equals("ImportDeclaration")) {
-                allImports += visit(child, "");
-                allImports += '/';
+                allImports.append(visit(child, ""));
+                allImports.append('/');
             }
         }
 
-        return allImports;
+        return allImports.toString();
     }
 
     private String dealWithImport(JmmNode node, String a) {
-        String ret = "";
+        StringBuilder ret = new StringBuilder();
 
         for (JmmNode child: node.getChildren()) {
-            ret += visit(child, a);
-            ret += '.';
+            ret.append(visit(child, a));
+            ret.append('.');
         }
 
         return ret.substring(0, ret.length() - 1);

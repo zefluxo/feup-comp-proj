@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023.visitors.symbolTable;
+package pt.up.fe.comp2023.symbolTable;
 
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
