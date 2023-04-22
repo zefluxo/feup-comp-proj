@@ -164,6 +164,18 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
     private List<Report> dealWithThis(JmmNode jmmNode, SimpleSymbolTable symbolTable) {
         if (jmmNode.hasAttribute("type")) return reports;
 
+        jmmNode.put("type", "invalid");
+        if (currMethod.isStatic()) {
+            reports.add(new Report(
+                    ReportType.ERROR,
+                    Stage.SEMANTIC,
+                    Integer.parseInt(jmmNode.get("lineStart")),
+                    Integer.parseInt(jmmNode.get("colStart")),
+                    "This in static method"
+            ));
+            return reports;
+        }
+
         jmmNode.put("type", className);
         jmmNode.put("isArray", "false");
         return reports;
