@@ -127,5 +127,38 @@ public class SimpleSymbolTable implements SymbolTable {
         return null;
     }
 
+    public Pair<Symbol, Character> findVariable(String varName, String exploredMethod) {
+        List<Symbol> methodParameters = this.getParameters(exploredMethod);
+        List<Symbol> classFields = this.getFields();
+        List<Symbol> localVariables = this.getLocalVariables(exploredMethod);
+        List<String> imports = this.getImports();
 
+        for (Symbol symbol : localVariables) {
+            if (symbol.getName().equals(varName)) {
+                return new Pair<>(symbol, 'l');
+            }
+        }
+
+        for (Symbol symbol : methodParameters) {
+            if (symbol.getName().equals(varName)) {
+                return new Pair<>(symbol, 'p');
+            }
+        }
+
+        for (Symbol symbol : classFields) {
+            if (symbol.getName().equals(varName)) {
+                return new Pair<>(symbol, 'f');
+            }
+        }
+
+        for (String importName : imports) {
+            String[] importNameSplit = importName.split("\\.");
+            String lastModule = importNameSplit[importNameSplit.length - 1];
+            if (varName.equals(lastModule))
+                return new Pair<>(new Symbol(null, varName), 'i');
+        }
+
+
+        return null;
+    }
 }

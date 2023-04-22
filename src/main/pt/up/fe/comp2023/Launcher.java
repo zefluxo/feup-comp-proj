@@ -62,6 +62,9 @@ public class Launcher {
             System.exit(-1);
         }
         // ... add remaining stages
+
+        OllirCodeGenerator ollirCodeGenerator = new OllirCodeGenerator(parserResult.getRootNode(), symbolTable);
+        System.out.println(ollirCodeGenerator.generateOllir());
     }
 
     private static Map<String, String> parseArgs(String[] args) {
