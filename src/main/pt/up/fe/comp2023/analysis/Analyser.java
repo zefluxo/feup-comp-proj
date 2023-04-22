@@ -79,7 +79,6 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
         String varName = jmmNode.get("varName");
 
         Type varType = getVarType(varName, symbolTable);
-
         if (varType == null) {
             reports.add(new Report(
                     ReportType.ERROR,
@@ -88,30 +87,45 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
                     Integer.parseInt(jmmNode.get("colStart")),
                     "Variable used in assignment is not declared"
             ));
+            return reports;
+        }
+
+        if (varType.getName().equals("fieldInStatic")) {
+            reports.add(new Report(
+                    ReportType.ERROR,
+                    Stage.SEMANTIC,
+                    Integer.parseInt(jmmNode.get("lineStart")),
+                    Integer.parseInt(jmmNode.get("colStart")),
+                    "Access to class field in static method"
+            ));
+            return reports;
         }
 
         Type indexType = getType(index, symbolTable);
         Type newValueType = getType(newValue, symbolTable);
 
-        if (newValueType.getName().equals("void")) return reports;
         if (indexType.isArray() || !indexType.getName().equals("int")) {
-            reports.add(new Report(
-                    ReportType.ERROR,
-                    Stage.SEMANTIC,
-                    Integer.parseInt(jmmNode.get("lineStart")),
-                    Integer.parseInt(jmmNode.get("colStart")),
-                    "Invalid array index on assignment"
-            ));
+            if (!indexType.getName().equals("void")) {
+                reports.add(new Report(
+                        ReportType.ERROR,
+                        Stage.SEMANTIC,
+                        Integer.parseInt(jmmNode.get("lineStart")),
+                        Integer.parseInt(jmmNode.get("colStart")),
+                        "Invalid array index on assignment"
+                ));
+            }
         }
 
-        if (!newValueType.equals(varType)) {
-            reports.add(new Report(
-                    ReportType.ERROR,
-                    Stage.SEMANTIC,
-                    Integer.parseInt(jmmNode.get("lineStart")),
-                    Integer.parseInt(jmmNode.get("colStart")),
-                    "Value assigned to variable is of a different type"
-            ));
+        if (!newValueType.getName().equals(varType.getName())) {
+            if (!newValueType.getName().equals("void")) {
+                reports.add(new Report(
+                        ReportType.ERROR,
+                        Stage.SEMANTIC,
+                        Integer.parseInt(jmmNode.get("lineStart")),
+                        Integer.parseInt(jmmNode.get("colStart")),
+                        "Value assigned to variable is of a different type"
+                ));
+            }
         }
 
         return reports;
@@ -236,7 +250,10 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
 
             List<String> methodNames = symbolTable.getMethods();
             if (!methodNames.contains(methodName)) {
-                if (superClassName != null) return reports;
+                if (superClassName != null) {
+                    jmmNode.put("type", "void");
+                    return reports;
+                }
                 reports.add(new Report(
                         ReportType.ERROR,
                         Stage.SEMANTIC,
@@ -485,16 +502,17 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
         Type indexType = getType(index, symbolTable);
 
         if (indexType.isArray() || !indexType.getName().equals("int")) {
-            reports.add(new Report(
-                    ReportType.ERROR,
-                    Stage.SEMANTIC,
-                    Integer.parseInt(jmmNode.get("lineStart")),
-                    Integer.parseInt(jmmNode.get("colStart")),
-                    "Invalid array index"
-            ));
+            if (!indexType.getName().equals("void")) {
+                reports.add(new Report(
+                        ReportType.ERROR,
+                        Stage.SEMANTIC,
+                        Integer.parseInt(jmmNode.get("lineStart")),
+                        Integer.parseInt(jmmNode.get("colStart")),
+                        "Invalid array index"
+                ));
+            }
             return reports;
         }
-
 
         jmmNode.put("type", expectedReturnType);
         return reports;
