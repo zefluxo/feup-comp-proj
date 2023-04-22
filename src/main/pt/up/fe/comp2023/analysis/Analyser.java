@@ -279,7 +279,17 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
                     ));
                     return reports;
                 }
+            } else if (!calledMethod.isStatic() && identifier.get("varName").equals(className)) {
+                reports.add(new Report(
+                        ReportType.ERROR,
+                        Stage.SEMANTIC,
+                        Integer.parseInt(jmmNode.get("lineStart")),
+                        Integer.parseInt(jmmNode.get("colStart")),
+                        "Non static method being called directly from class"
+                ));
+                return reports;
             }
+
 
             if (methodArguments.size() != arguments.size()) {
                 reports.add(new Report(
