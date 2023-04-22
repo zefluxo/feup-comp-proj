@@ -93,6 +93,7 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
         Type indexType = getType(index, symbolTable);
         Type newValueType = getType(newValue, symbolTable);
 
+        if (newValueType.getName().equals("void")) return reports;
         if (indexType.isArray() || !indexType.getName().equals("int")) {
             reports.add(new Report(
                     ReportType.ERROR,
@@ -133,6 +134,8 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
         }
 
         Type newValueType = getType(newValue, symbolTable);
+        if (newValueType.getName().equals("void")) return reports;
+
         List<String> importedClasses = new ArrayList<>();
 
         for (String imp: symbolTable.getImports()) {
@@ -560,7 +563,7 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
         }
 
         for (Symbol field: symbolTable.getFields()) {
-            if (field.getName().equals(id)) {
+            if (field.getName().equals(id) && !currMethod.isStatic()) {
                 Type type = field.getType();
 
                 jmmNode.put("type", type.getName());
