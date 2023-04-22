@@ -133,6 +133,17 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
             return reports;
         }
 
+        if (type.getName().equals("fieldInStatic")) {
+            reports.add(new Report(
+                    ReportType.ERROR,
+                    Stage.SEMANTIC,
+                    Integer.parseInt(jmmNode.get("lineStart")),
+                    Integer.parseInt(jmmNode.get("colStart")),
+                    "Access to class field in static method"
+            ));
+            return reports;
+        }
+
         Type newValueType = getType(newValue, symbolTable);
         if (newValueType.getName().equals("void")) return reports;
 
@@ -538,6 +549,7 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
     private List<Report> dealWithIdentifier(JmmNode jmmNode, SimpleSymbolTable symbolTable) {
         if (jmmNode.hasAttribute("type")) return reports;
 
+        jmmNode.put("type", "invalid");
         String id = jmmNode.get("varName");
 
         for (Symbol local: currMethod.getLocalVariables()) {
@@ -563,7 +575,19 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
         }
 
         for (Symbol field: symbolTable.getFields()) {
-            if (field.getName().equals(id) && !currMethod.isStatic()) {
+            if (field.getName().equals(id)) {
+
+                if (currMethod.isStatic()) {
+                    reports.add(new Report(
+                            ReportType.ERROR,
+                            Stage.SEMANTIC,
+                            Integer.parseInt(jmmNode.get("lineStart")),
+                            Integer.parseInt(jmmNode.get("colStart")),
+                            "Trying to access class field in static method"
+                    ));
+                    return reports;
+                }
+
                 Type type = field.getType();
 
                 jmmNode.put("type", type.getName());
@@ -596,7 +620,6 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
                 Integer.parseInt(jmmNode.get("colStart")),
                 "Variable " + id + " is not declared"
         ));
-        jmmNode.put("type", "invalid");
         return reports;
     }
 
@@ -713,6 +736,7 @@ public class Analyser extends PreorderJmmVisitor<SimpleSymbolTable, List<Report>
 
         for (Symbol field: symbolTable.getFields()) {
             if (field.getName().equals(varName)) {
+                if (currMethod.isStatic()) return new Type("fieldInStatic", false);
                 return field.getType();
             }
         }
