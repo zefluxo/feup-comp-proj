@@ -7,9 +7,9 @@ public class OllirTools {
     private boolean isTerminal = false;
 
     public OllirTools() {
-        this.preCode = "invalid";
-        this.code = "invalid";
-        this.opType = "invalid";
+        this.preCode = "";
+        this.code = "";
+        this.opType = "";
     }
 
     public OllirTools(String preCode, String code, String opType) {

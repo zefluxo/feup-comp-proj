@@ -32,6 +32,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         addVisit("Integer", this::dealWithInteger);
         addVisit("Boolean", this::dealWithBoolean);
         addVisit("Identifier", this::dealWithIdentifier);
+        addVisit("ObjIdentifier", this::dealWithObjIdentifier);
 
         setDefaultValue(OllirTools::new);
     }
@@ -83,10 +84,10 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         String objName = auxOllirTools.getCode();
 
         // static method call or virtual method call
-        if (!objName.contains(".")) {
+        if (!objName.contains(".") && !objName.equals("this")){
             code += "invokestatic(" + objName + ", \"" + jmmNode.get("methodName") + "\"" + arguments + ").V";
         } else {
-            String returnType = OllirTools.getOllirType(this.symbolTable.getReturnType(this.exploredMethod).getName());
+            String returnType = OllirTools.getOllirType(this.symbolTable.getReturnType(jmmNode.get("methodName")).getName());
             code += "invokevirtual(" + objName + ", \"" + jmmNode.get("methodName") + "\"" + arguments + ")." + returnType;
             opType = returnType;
         }
@@ -172,7 +173,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
 
             // add preceding operation
             if (preCode != "") preCode += "\n";
-            preCode += s + tempVar + " :=." + rightOllirTools.getOpType() + " " + rightOllirTools.getCode();
+            preCode += s + tempVar + " :=." + rightOllirTools.getOpType() + " " + rightOllirTools.getCode() + ";";
 
             rightCode = tempVar;
         }
@@ -257,6 +258,20 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         } else if (var.b == 'i') {
             code += var.a.getName();
         }
+
+        // create  resulting OllirTools
+        OllirTools res = new OllirTools(preCode, code, opType);
+        res.signalIdentifier();
+
+        return res;
+    }
+
+    private OllirTools dealWithObjIdentifier(JmmNode jmmNode, String s) {
+        String code = "";
+        String preCode = "";
+        String opType = "";
+
+        code += "this";
 
         // create  resulting OllirTools
         OllirTools res = new OllirTools(preCode, code, opType);
