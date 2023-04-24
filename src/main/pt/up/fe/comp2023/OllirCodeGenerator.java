@@ -30,9 +30,19 @@ public class OllirCodeGenerator extends AJmmVisitor<String, String> {
     }
 
     private String dealWithRoot(JmmNode jmmNode, String s) {
+        s = (s != null ? s : "");
+        String ret = "";
+
+        // Imports
+        for (String importName : this.symbolTable.getImports()) {
+            ret += s + "import " + importName + ";\n";
+        }
+
+
         for (JmmNode child : jmmNode.getChildren()) {
             if (child.getKind().equals("ClassDeclaration")) {
-                return visit(child, "");
+                ret += s + visit(child, s);
+                return ret;
             }
         }
 

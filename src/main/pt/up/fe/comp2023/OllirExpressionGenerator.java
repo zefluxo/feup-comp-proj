@@ -107,7 +107,6 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         }
 
         auxNode = auxNode.getJmmParent();
-        System.out.println(auxNode.getKind());
         if (auxNode.getKind().equals("Assignment")) {
             code += "new (" + jmmNode.get("objName") + ")." + jmmNode.get("objName");
             String varName = auxNode.get("varName");
