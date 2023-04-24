@@ -162,7 +162,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
 
             // add preceding operation
             if (preCode != "") preCode += "\n";
-            preCode += s + tempVar + " :=." + leftOllirTools.getOpType() + " " + leftOllirTools.getCode();
+            preCode += s + tempVar + " :=." + leftOllirTools.getOpType() + " " + leftOllirTools.getCode() + ";";
 
             leftCode = tempVar;
         }
