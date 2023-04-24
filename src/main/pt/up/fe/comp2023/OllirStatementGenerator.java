@@ -87,7 +87,14 @@ public class OllirStatementGenerator extends AJmmVisitor<String, String> {
             if (index < 1) return "";
             ret += s + "$" + (index) +  "." + var.a.getName() + "." + type + " :=." + type + " " + ollirTools.getCode() + ";";
         } else if (var.b == 'f') {
-            ret += s + "putfield(this, " + var.a.getName() + "." + type + ", " + ollirTools.getCode() + ").V;";
+            if (!ollirTools.isTerminal()) {
+                this.tempVarCounter++;
+                String tempVar = "t" + this.tempVarCounter;
+                ret += s + tempVar + "." + type + " :=." + type + " " + ollirTools.getCode() + ";\n";
+                ret += s + "putfield(this, " + var.a.getName() + "." + type + ", " + tempVar + "." + type + ").V;";
+            } else {
+                ret += s + "putfield(this, " + var.a.getName() + "." + type + ", " + ollirTools.getCode() + ").V;";
+            }
         }
 
         return ret;

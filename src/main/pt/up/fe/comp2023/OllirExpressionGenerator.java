@@ -81,7 +81,23 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
             if (preCode != "") preCode += "\n";
             preCode += auxOllirTools.getPreCode();
         }
-        String objName = auxOllirTools.getCode();
+
+        String objName = "";
+        if ( !auxOllirTools.isTerminal() ) {
+            // create a temporary variable to store the result of the operation
+            this.tempVarCount++;
+            String tempVar = OllirTools.tempVarToString(tempVarCount) + "." + auxOllirTools.getOpType();
+
+            // add to preCode
+            if (preCode != "") preCode += "\n";
+            preCode += s + tempVar + " :=." + auxOllirTools.getOpType() + " " + auxOllirTools.getCode() + ";";
+
+            // add to arguments
+            objName += tempVar;
+        }
+        else {
+            objName = auxOllirTools.getCode();
+        }
 
         // static method call or virtual method call
         if (!objName.contains(".") && !objName.equals("this")){
@@ -272,9 +288,11 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         String opType = "";
 
         code += "this";
+        opType += this.symbolTable.getClassName();
 
         // create  resulting OllirTools
         OllirTools res = new OllirTools(preCode, code, opType);
+        res.signalIdentifier();
 
         return res;
     }
