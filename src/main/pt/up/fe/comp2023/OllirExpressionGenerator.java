@@ -27,7 +27,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
     protected void buildVisitor() {
         addVisit("ParenthesesOp", this::dealWithParenthesesOp);
         addVisit("ClassMethodCall", this::dealWithClassMethodCall);
-        //addVisit("ObjectDeclaration", this::dealWithObjectDeclaration);
+        addVisit("ObjectDeclaration", this::dealWithObjectDeclaration);
         addVisit("BinaryOp", this::dealWithBinaryOp);
         addVisit("Integer", this::dealWithInteger);
         addVisit("Boolean", this::dealWithBoolean);
@@ -60,15 +60,13 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
 
                 // add to preCode
                 if (preCode != "") preCode += "\n";
-                preCode += s + tempVar + " :=. " + auxOllirTools.getOpType() + " " + auxOllirTools.getCode() + ";";
+                preCode += s + tempVar + " :=." + auxOllirTools.getOpType() + " " + auxOllirTools.getCode() + ";";
 
                 // add to arguments
-                if (i > 0) arguments +=  ", " + tempVar;
-                else arguments += tempVar;
+                arguments +=  ", " + tempVar;
             }
             else {
-                if (i > 0) arguments += ", " + auxOllirTools.getCode();
-                else arguments += auxOllirTools.getCode();
+                arguments += ", " + auxOllirTools.getCode();
             }
         }
 
@@ -84,10 +82,11 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
 
         // static method call or virtual method call
         if (!objName.contains(".")) {
-            code += "invokestatic(" + objName + ", \"" + jmmNode.get("methodName") + "\", " + arguments + ").V";
+            code += "invokestatic(" + objName + ", \"" + jmmNode.get("methodName") + "\"" + arguments + ").V";
         } else {
-            code += "invokevirtual(" + objName + ", \"" + jmmNode.get("methodName") + "\", " + arguments + ")." + OllirTools.getOllirType(jmmNode.get("returnType"));
-            opType = OllirTools.getOllirType(jmmNode.get("returnType"));
+            String returnType = OllirTools.getOllirType(this.symbolTable.getReturnType(this.exploredMethod).getName());
+            code += "invokevirtual(" + objName + ", \"" + jmmNode.get("methodName") + "\"" + arguments + ")." + returnType;
+            opType = returnType;
         }
 
         // create  resulting OllirTools
@@ -96,31 +95,39 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         return res;
     }
 
-    /*private OllirTools dealWithObjectDeclaration(JmmNode jmmNode, String s) {
+    private OllirTools dealWithObjectDeclaration(JmmNode jmmNode, String s) {
         String opType = jmmNode.get("objName");
         String preCode = "";
         String code = "";
-        String postCode = "";
 
+        // check if declaration comes from assign
+        JmmNode auxNode = jmmNode;
+        while(auxNode.getJmmParent().getKind().equals("ParenthesesOp")) {
+            auxNode = auxNode.getJmmParent();
+        }
 
-        if (jmmNode.getJmmParent().getKind().equals("Assigment")) {
+        auxNode = auxNode.getJmmParent();
+        System.out.println(auxNode.getKind());
+        if (auxNode.getKind().equals("Assignment")) {
             code += "new (" + jmmNode.get("objName") + ")." + jmmNode.get("objName");
-            String varName = jmmNode.getJmmParent().get("varName");
-            res.addPostCode(s + "invokespecial(" + varName + "." + jmmNode.get("objName") + ", \"<init>\").V;");
+            String varName = auxNode.get("varName");
+            code += ";\n" + s + "invokespecial(" + varName + "." + jmmNode.get("objName") + ", \"<init>\").V";
 
+            OllirTools res = new OllirTools(preCode, code, opType);
             return res;
         }
 
-        String tempVar = OllirTools.tempVarToString(res.incrementVarCounter());
-        String preCode = s + tempVar + "." + jmmNode.get("objName") +  " :=." + jmmNode.get("objName") + " new (" + jmmNode.get("objName") + ")." + jmmNode.get("objName") + ";";
-        res.addPreCode(preCode);
-        preCode = "\n" + s + "invokespecial(" + tempVar + "." + jmmNode.get("objName") + ", \"<init>\").V;";
-        res.addPreCode(preCode);
-        res.setCode(tempVar + "." + jmmNode.get("objName"));
+        this.tempVarCount++;
+        String tempVar = OllirTools.tempVarToString(tempVarCount) + "." + opType;
+        preCode += s + tempVar + "." + jmmNode.get("objName") +  " :=." + jmmNode.get("objName") + " new (" + jmmNode.get("objName") + ")." + jmmNode.get("objName") + ";";
+        preCode += "\n" + s + "invokespecial(" + tempVar + ", \"<init>\").V;";
+        code += tempVar;
+
+        OllirTools res = new OllirTools(preCode, code, opType);
         res.signalIdentifier();
 
         return res;
-    }*/
+    }
 
     private OllirTools dealWithBinaryOp(JmmNode jmmNode, String s) {
         String code = "";
