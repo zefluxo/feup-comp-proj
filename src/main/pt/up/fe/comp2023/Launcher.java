@@ -2,13 +2,16 @@ package pt.up.fe.comp2023;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
-import pt.up.fe.comp2023.analysis.Analyser;
+import pt.up.fe.comp.jmm.jasmin.JasminResult;
+import pt.up.fe.comp.jmm.ollir.OllirResult;
+import pt.up.fe.comp2023.ollirToJasmin.OllirToJasmin;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -49,22 +52,32 @@ public class Launcher {
 
         System.out.println(parserResult.getRootNode().toTree());
 
+        // Generate symbol table
         SimpleSymbolTable symbolTable = new SimpleSymbolTable(parserResult.getRootNode());
         System.out.println(symbolTable.print());
 
+        // Run semantic analysis
         SimpleAnalysis analysis = new SimpleAnalysis();
         JmmSemanticsResult semanticsResult = analysis.semanticAnalysis(parserResult);
 
+        // Check for semantic errors
         try {
             TestUtils.noErrors(semanticsResult.getReports());
         } catch (RuntimeException e) {
             System.err.println(e.getMessage());
             System.exit(-1);
         }
-        // ... add remaining stages
 
+        // Generate OLLIR
         OllirCodeGenerator ollirCodeGenerator = new OllirCodeGenerator(parserResult.getRootNode(), symbolTable);
-        System.out.println(ollirCodeGenerator.generateOllir());
+        String ollirString = ollirCodeGenerator.generateOllir();
+        System.out.println(ollirString);
+
+        // Generate Jasmin
+        OllirResult ollirResult = new OllirResult(ollirString, Collections.emptyMap());
+        OllirToJasmin ollirToJasmin = new OllirToJasmin();
+        JasminResult jasmin = ollirToJasmin.toJasmin(ollirResult);
+        System.out.println(jasmin.getJasminCode());
     }
 
     private static Map<String, String> parseArgs(String[] args) {

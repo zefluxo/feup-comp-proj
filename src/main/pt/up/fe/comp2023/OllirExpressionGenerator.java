@@ -5,7 +5,7 @@ import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTools> {
     private final JmmNode statementRoot;
@@ -32,6 +32,8 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         addVisit("Integer", this::dealWithInteger);
         addVisit("Boolean", this::dealWithBoolean);
         addVisit("Identifier", this::dealWithIdentifier);
+
+        setDefaultValue(OllirTools::new);
     }
 
     private OllirTools dealWithParenthesesOp(JmmNode jmmNode, String s) {

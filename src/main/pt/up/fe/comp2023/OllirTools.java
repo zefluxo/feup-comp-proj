@@ -6,7 +6,13 @@ public class OllirTools {
     private String opType;
     private boolean isTerminal = false;
 
-    public  OllirTools(String preCode, String code, String opType) {
+    public OllirTools() {
+        this.preCode = "invalid";
+        this.code = "invalid";
+        this.opType = "invalid";
+    }
+
+    public OllirTools(String preCode, String code, String opType) {
         this.preCode = preCode;
         this.code = code;
         this.opType = opType;
