@@ -84,7 +84,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         String objName = auxOllirTools.getCode();
 
         // static method call or virtual method call
-        if (!objName.contains(".") /*&& !objName.equals("this")*/){
+        if (!objName.contains(".") && !objName.equals("this")){
             code += "invokestatic(" + objName + ", \"" + jmmNode.get("methodName") + "\"" + arguments + ").V";
         } else {
             String returnType = OllirTools.getOllirType(this.symbolTable.getReturnType(jmmNode.get("methodName")).getName());

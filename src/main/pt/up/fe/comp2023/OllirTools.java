@@ -39,9 +39,9 @@ public class OllirTools {
     }
 
     public void resetCode(){
-        this.preCode = "";
-        this.code = "";
-        this.opType = "";
+        this.preCode = "invalid";
+        this.code = "invalid";
+        this.opType = "invalid";
     }
 
     public static String tempVarToString(int tempVarCounter) { return "t" + tempVarCounter; }
