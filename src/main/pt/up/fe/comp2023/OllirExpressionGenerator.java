@@ -275,7 +275,6 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
 
         // create  resulting OllirTools
         OllirTools res = new OllirTools(preCode, code, opType);
-        res.signalIdentifier();
 
         return res;
     }
