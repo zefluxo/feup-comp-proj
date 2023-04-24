@@ -85,7 +85,7 @@ public class OllirStatementGenerator extends AJmmVisitor<String, String> {
         } else if (var.b == 'p') {
             int index = this.symbolTable.getParameters(this.exploredMethod).indexOf(var.a) + 1; // could give an error
             if (index < 1) return "";
-            ret += s + "$" + (index+1) +  "." + var.a.getName() + "." + type + " :=." + type + " " + ollirTools.getCode() + ";";
+            ret += s + "$" + (index) +  "." + var.a.getName() + "." + type + " :=." + type + " " + ollirTools.getCode() + ";";
         } else if (var.b == 'f') {
             ret += s + "putfield(this, " + var.a.getName() + "." + type + ", " + ollirTools.getCode() + ").V;";
         }
