@@ -34,9 +34,13 @@ public class OllirCodeGenerator extends AJmmVisitor<String, String> {
         String ret = "";
 
         // Imports
-        for (String importName : this.symbolTable.getImports()) {
-            ret += s + "import " + importName + ";\n";
+        List<String> imports = this.symbolTable.getImports();
+        if (!imports.isEmpty()) {
+            for (String importName : imports) {
+                if (!importName.equals("")) ret += s + "import " + importName + ";\n";
+            }
         }
+
 
 
         for (JmmNode child : jmmNode.getChildren()) {
