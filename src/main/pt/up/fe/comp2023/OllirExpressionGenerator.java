@@ -84,7 +84,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         String objName = auxOllirTools.getCode();
 
         // static method call or virtual method call
-        if (!objName.contains(".") && !objName.equals("this")){
+        if (!objName.contains(".") /*&& !objName.equals("this")*/){
             code += "invokestatic(" + objName + ", \"" + jmmNode.get("methodName") + "\"" + arguments + ").V";
         } else {
             String returnType = OllirTools.getOllirType(this.symbolTable.getReturnType(jmmNode.get("methodName")).getName());
@@ -162,7 +162,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
 
             // add preceding operation
             if (preCode != "") preCode += "\n";
-            preCode += s + tempVar + " :=." + leftOllirTools.getOpType() + " " + leftOllirTools.getCode();
+            preCode += s + tempVar + " :=." + leftOllirTools.getOpType() + " " + leftOllirTools.getCode() + ";";
 
             leftCode = tempVar;
         }
@@ -173,7 +173,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
 
             // add preceding operation
             if (preCode != "") preCode += "\n";
-            preCode += s + tempVar + " :=." + rightOllirTools.getOpType() + " " + rightOllirTools.getCode();
+            preCode += s + tempVar + " :=." + rightOllirTools.getOpType() + " " + rightOllirTools.getCode() + ";";
 
             rightCode = tempVar;
         }
