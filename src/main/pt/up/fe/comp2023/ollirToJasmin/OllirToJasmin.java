@@ -15,16 +15,19 @@ public class OllirToJasmin implements JasminBackend {
         this.reports = new ArrayList<>();
         this.className = "";
         this.superClass = "java/lang/Object";
+        this.imports = new ArrayList<>();
     }
     StringBuilder jasminCode;
     ArrayList<Report> reports;
     String className;
     String superClass;
+    ArrayList<String> imports;
 
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
         ClassUnit ollirClass = ollirResult.getOllirClass();
         ollirClass.buildVarTables();
+        this.imports = ollirClass.getImports();
 
         this.jasminCode.append(headerToJasmin(ollirClass));
 
@@ -293,6 +296,7 @@ public class OllirToJasmin implements JasminBackend {
         ArrayList<Element> listOfOperands = instruction.getListOfOperands();
         CallType invocationType = instruction.getInvocationType();
         Type returnType = instruction.getReturnType();
+        Type firstArgClassType = firstArg.getType();
 
         if (invocationType == CallType.invokespecial || invocationType == CallType.invokevirtual) {
             jasminCall.append(toStack(firstArg, varTable));
@@ -332,21 +336,12 @@ public class OllirToJasmin implements JasminBackend {
             default -> throw new IllegalStateException("Unexpected value: " + invocationType);
         }
 
-        Type firstArgClassType = firstArg.getType();
-        switch (firstArgClassType.getTypeOfElement()) {
+        if (invocationType == CallType.invokespecial && firstArgClassType.getTypeOfElement() == ElementType.THIS) jasminCall.append(this.superClass);
+        else if (invocationType == CallType.invokevirtual || invocationType == CallType.invokespecial) jasminCall.append(getClassFQN(((ClassType) firstArgClassType).getName()));
+        else jasminCall.append(getClassFQN(firstArg.getName()));
 
-            case OBJECTREF -> {
-                jasminCall.append(this.className);
-            }
-            case CLASS -> {
-                jasminCall.append(firstArg.getName());
-            }
-            case THIS -> {
-                jasminCall.append(this.superClass);
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + firstArgClassType.getTypeOfElement());
-        }
-        if (invocationType != CallType.NEW) jasminCall.append("/").append(secondArg.getLiteral(), 1, secondArg.getLiteral().length() - 1).append("(");
+        if (invocationType == CallType.invokespecial) jasminCall.append("/<init>(");
+        else if (invocationType != CallType.NEW) jasminCall.append("/").append(secondArg.getLiteral().replace("\"", "")).append("(");
         else jasminCall.append("\ndup");
 
         for (Element op : listOfOperands) jasminCall.append(typeToString(op.getType()));
@@ -516,5 +511,12 @@ public class OllirToJasmin implements JasminBackend {
         if (0 <= varNum && varNum <= 3) isShort = "_";
 
         return stack.append(isShort).append(varNum).append('\n');
+    }
+
+    private String getClassFQN(String className) {
+        for (String imported : this.imports) {
+            if (imported.endsWith(className)) return imported.replace("\\.", "/");
+        }
+        return className;
     }
 }
