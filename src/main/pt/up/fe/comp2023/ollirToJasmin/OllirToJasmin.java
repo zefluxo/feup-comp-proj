@@ -175,11 +175,13 @@ public class OllirToJasmin implements JasminBackend {
         jasminMethod.append(".limit locals ").append(localsLimit).append('\n');
 
         // Instructions
+        boolean hasReturn = false;
         for (Instruction instruction : listOfInstr) {
             jasminMethod.append(instructionToJasmin(instruction, varTable));
             if (instruction.getInstType() != InstructionType.NOPER) jasminMethod.append('\n');
+            if (instruction.getInstType() == InstructionType.RETURN) hasReturn = true;
         }
-        if (ollirMethod.isConstructMethod()) jasminMethod.append("return\n");
+        if (!hasReturn) jasminMethod.append("return\n");
 
         jasminMethod.append(".end method");
 
