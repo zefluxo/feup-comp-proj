@@ -110,7 +110,7 @@ public class OllirToJasmin implements JasminBackend {
         this.superClass = ollirClass.getSuperClass();
         String accessModifier = accessModifierToString(accessModifiers);
 
-        header.append(accessModifier);
+        header.append(accessModifiers == AccessModifiers.DEFAULT ? "public " : accessModifier);
         if (isStatic) header.append("static ");
         if (isFinal) header.append("final ");
         header.append(className).append('\n');
@@ -157,7 +157,11 @@ public class OllirToJasmin implements JasminBackend {
         ArrayList<Instruction> listOfInstr = ollirMethod.getInstructions();
 
         // Header
-        jasminMethod.append(accessModifierToString(methodAccessModifier));
+        if (isConstructMethod && methodAccessModifier == AccessModifiers.DEFAULT) {
+            jasminMethod.append("public ");
+        } else {
+            jasminMethod.append(accessModifierToString(methodAccessModifier));
+        }
         if (isStaticMethod) jasminMethod.append("static ");
         if (isFinalMethod) jasminMethod.append("final ");
         jasminMethod.append(isConstructMethod ? "<init>" : methodName);
