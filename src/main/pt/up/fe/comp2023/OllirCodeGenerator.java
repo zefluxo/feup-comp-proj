@@ -147,6 +147,7 @@ public class OllirCodeGenerator extends AJmmVisitor<String, String> {
         JmmNode returnNode = jmmNode.getChildren().get(jmmNode.getChildren().size() - 1);
         OllirExpressionGenerator ollirExpressionGenerator = new OllirExpressionGenerator(returnNode, symbolTable, jmmNode.get("methodName"), tempVarCounter);
         OllirTools ollirTools = ollirExpressionGenerator.generateOllirTools(s2);
+        tempVarCounter = ollirExpressionGenerator.getTempVarCount();
 
         // get preCode
         if (ollirTools.getPreCode() != "")
@@ -158,7 +159,10 @@ public class OllirCodeGenerator extends AJmmVisitor<String, String> {
             ret += s2 + OllirTools.tempVarToString(tempVarCounter) + "." + ollirTools.getOpType() + " :=." + ollirTools.getOpType() + " " + ollirTools.getCode() + ";\n";
             ret += s2 + "ret." + ollirTools.getOpType() + " " + OllirTools.tempVarToString(tempVarCounter) + "." + ollirTools.getOpType() + ";\n";
         } else {
-            ret += s2 + "ret." + ollirTools.getOpType() + " " + ollirTools.getCode() + ";\n";
+            if (ollirTools.getCode().equals("this"))
+                ret += s2 + "ret." + ollirTools.getOpType() + " " + ollirTools.getCode() + "." + this.symbolTable.getClassName() + ";\n";
+            else
+                ret += s2 + "ret." + ollirTools.getOpType() + " " + ollirTools.getCode() + ";\n";
         }
         ret += s + "}";
 
