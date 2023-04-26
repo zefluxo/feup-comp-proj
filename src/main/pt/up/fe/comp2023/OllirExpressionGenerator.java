@@ -268,7 +268,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
             // create a temporary variable to store the result of the operation
             this.tempVarCount++;
             preCode += s + OllirTools.tempVarToString(this.tempVarCount) + "." + opType + " :=." + opType + " " +
-                    "getfield(this, " + var.a.getName() + "." + opType + ")." + opType;
+                    "getfield(this, " + var.a.getName() + "." + opType + ")." + opType + ";";
 
             code += OllirTools.tempVarToString(this.tempVarCount) + "." + opType;
         } else if (var.b == 'i') {
