@@ -33,6 +33,7 @@ public class OllirToJasmin implements JasminBackend {
 
         ArrayList<Field> fields = ollirClass.getFields();
         for (Field field : fields) jasminCode.append(fieldToJasmin(field)).append('\n');
+        jasminCode.append('\n');
 
         ArrayList<Method> methods = ollirClass.getMethods();
         for (Method method : methods) jasminCode.append(methodToJasmin(method).append('\n'));
@@ -391,7 +392,7 @@ public class OllirToJasmin implements JasminBackend {
         jasminPutField.append(toStack(firstOperand, varTable));
         jasminPutField.append(toStack(thirdOperand));
 
-        return jasminPutField.append("putfield ").append(getClassFQN(firstOperand.getName())).append("/").append(secondOperand.getName()).append(" ").append(typeToString(fieldType));
+        return jasminPutField.append("putfield ").append(getClassFQN(firstOperand.getName())).append("/").append(secondOperand.getName()).append(" ").append(typeToString(secondOperand.getType()));
     }
 
     private StringBuilder getFieldInstruction(GetFieldInstruction instruction, HashMap<String, Descriptor> varTable) {
