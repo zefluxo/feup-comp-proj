@@ -386,11 +386,14 @@ public class OllirToJasmin implements JasminBackend {
         StringBuilder jasminPutField = new StringBuilder();
         Operand firstOperand = (Operand) instruction.getFirstOperand();
         Operand secondOperand = (Operand) instruction.getSecondOperand();
-        LiteralElement thirdOperand = (LiteralElement) instruction.getThirdOperand();
-        Type fieldType = instruction.getFieldType();
+        Element thirdOperand = instruction.getThirdOperand();
 
         jasminPutField.append(toStack(firstOperand, varTable));
-        jasminPutField.append(toStack(thirdOperand));
+        if (thirdOperand.isLiteral()) {
+            jasminPutField.append(toStack((LiteralElement) thirdOperand));
+        } else {
+            jasminPutField.append(toStack((Operand) thirdOperand, varTable));
+        }
 
         return jasminPutField.append("putfield ").append(getClassFQN(firstOperand.getName())).append("/").append(secondOperand.getName()).append(" ").append(typeToString(secondOperand.getType()));
     }
