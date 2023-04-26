@@ -73,8 +73,11 @@ public class OllirToJasmin implements JasminBackend {
             case ARRAYREF -> {
                 typeString = "[" + typeToString(((ArrayType) type).getElementType());
             }
-            case OBJECTREF, CLASS, THIS -> {
+            case THIS -> {
                 typeString = "L" + this.className + ";";
+            }
+            case OBJECTREF, CLASS -> {
+                typeString = "L" + getClassFQN(((ClassType) type).getName()) + ";";
             }
             case STRING -> {
                 typeString = "Ljava/lang/String;";
@@ -388,7 +391,7 @@ public class OllirToJasmin implements JasminBackend {
         jasminPutField.append(toStack(firstOperand, varTable));
         jasminPutField.append(toStack(thirdOperand));
 
-        return jasminPutField.append("putfield ").append(firstOperand.getName()).append("/").append(secondOperand.getName()).append(" ").append(typeToString(fieldType));
+        return jasminPutField.append("putfield ").append(getClassFQN(firstOperand.getName())).append("/").append(secondOperand.getName()).append(" ").append(typeToString(fieldType));
     }
 
     private StringBuilder getFieldInstruction(GetFieldInstruction instruction, HashMap<String, Descriptor> varTable) {
@@ -399,7 +402,7 @@ public class OllirToJasmin implements JasminBackend {
 
         jasminGetField.append(toStack(firstOperand, varTable));
 
-        return jasminGetField.append("getfield ").append(firstOperand.getName()).append("/").append(secondOperand.getName()).append(" ").append(typeToString(fieldType));
+        return jasminGetField.append("getfield ").append(getClassFQN(firstOperand.getName())).append("/").append(secondOperand.getName()).append(" ").append(typeToString(fieldType));
     }
 
     private StringBuilder unaryOperInstruction(UnaryOpInstruction instruction, HashMap<String, Descriptor> varTable) {
@@ -514,6 +517,7 @@ public class OllirToJasmin implements JasminBackend {
     }
 
     private String getClassFQN(String className) {
+        if (className.equals("this")) return this.className;
         for (String imported : this.imports) {
             if (imported.endsWith(className)) return imported.replace("\\.", "/");
         }
