@@ -188,7 +188,7 @@ public class OllirToJasmin implements JasminBackend {
             if (instruction.getInstType() != InstructionType.NOPER) jasminMethod.append('\n');
             if (instruction.getInstType() == InstructionType.RETURN) hasReturn = true;
 
-            if (instruction.getInstType() == InstructionType.CALL && (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID || ((CallInstruction) instruction).getInvocationType() == CallType.invokespecial)) {
+            if (instruction.getInstType() == InstructionType.CALL && (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)) {
                 jasminMethod.append("pop\n");
             }
         }
