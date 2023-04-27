@@ -236,9 +236,9 @@ public class OllirToJasmin implements JasminBackend {
             default -> throw new IllegalStateException("Unexpected value: " + instrType);
         }
 
-        if (instrType == InstructionType.CALL && ((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID) {
+        /*if (instrType == InstructionType.CALL && ((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID) {
             jasminInstruction.append("\npop");
-        }
+        }*/
 
         return jasminInstruction;
     }
