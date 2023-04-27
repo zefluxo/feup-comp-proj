@@ -4,8 +4,10 @@ import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
+import pt.up.fe.comp2023.symbolTable.entities.Method;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTools> {
     private final JmmNode statementRoot;
@@ -102,16 +104,43 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         // static method call or virtual method call
         if (!objName.contains(".") && !objName.equals("this")){
             code += "invokestatic(" + objName + ", \"" + jmmNode.get("methodName") + "\"" + arguments + ").V";
-        } else {
-            String returnType = OllirTools.getOllirType(this.exploredMethod); //wrong
+            return new OllirTools(preCode, code, opType);
+        }
+
+        List<String> methods = this.symbolTable.getMethods();
+        String calledMethod = jmmNode.get("methodName");
+
+        // check if called method belongs to class
+        if (methods.contains(calledMethod)) {
+            String returnType = OllirTools.getOllirType(this.symbolTable.getReturnType(calledMethod).getName()); //wrong
+            code += "invokevirtual(" + objName + ", \"" + calledMethod + "\"" + arguments + ")." + returnType;
+            opType = returnType;
+
+            return new OllirTools(preCode, code, opType);
+        }
+
+        // check if declaration comes from assign
+        JmmNode auxNode = jmmNode;
+        while(auxNode.getJmmParent().getKind().equals("ParenthesesOp")) {
+            auxNode = auxNode.getJmmParent();
+        }
+
+        // In case of method coming from import, assume return type
+        auxNode = auxNode.getJmmParent();
+        if (auxNode.getKind().equals("Assignment")) {
+            // get the variable
+            Pair<Symbol, Character> var = this.symbolTable.findVariable(auxNode.get("varName"), this.exploredMethod);
+            if ( var == null ) return new OllirTools("", "", "");
+
+            String returnType = OllirTools.getOllirType(var.a.getType().getName());
             code += "invokevirtual(" + objName + ", \"" + jmmNode.get("methodName") + "\"" + arguments + ")." + returnType;
             opType = returnType;
+        } else {
+            code += "invokevirtual(" + objName + ", \"" + jmmNode.get("methodName") + "\"" + arguments + ").V";
         }
 
         // create  resulting OllirTools
-        OllirTools res = new OllirTools(preCode, code, opType);
-
-        return res;
+        return new OllirTools(preCode, code, opType);
     }
 
     private OllirTools dealWithObjectDeclaration(JmmNode jmmNode, String s) {
