@@ -187,6 +187,10 @@ public class OllirToJasmin implements JasminBackend {
             jasminMethod.append(instructionToJasmin(instruction, varTable));
             if (instruction.getInstType() != InstructionType.NOPER) jasminMethod.append('\n');
             if (instruction.getInstType() == InstructionType.RETURN) hasReturn = true;
+
+            if (instruction.getInstType() == InstructionType.CALL && (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID || ((CallInstruction) instruction).getInvocationType() == CallType.invokespecial)) {
+                jasminMethod.append("pop\n");
+            }
         }
         if (!hasReturn) jasminMethod.append("return\n");
 
@@ -235,10 +239,6 @@ public class OllirToJasmin implements JasminBackend {
             }
             default -> throw new IllegalStateException("Unexpected value: " + instrType);
         }
-
-        /*if (instrType == InstructionType.CALL && ((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID) {
-            jasminInstruction.append("\npop");
-        }*/
 
         return jasminInstruction;
     }
