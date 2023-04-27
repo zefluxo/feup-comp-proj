@@ -247,6 +247,8 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         String preCode = "";
         String opType = "";
 
+        boolean signalIdentifier = false;
+
         // get the variable
         Pair<Symbol, Character> var = this.symbolTable.findVariable(jmmNode.get("varName"), this.exploredMethod);
         if ( var == null ) return new OllirTools("", "", "");
@@ -255,6 +257,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
             // get the variable type
             opType += OllirTools.getOllirType(var.a.getType().getName());
             code += var.a.getName() + "." + opType;
+            signalIdentifier = true;
         } else if (var.b == 'p') {
             // get the variable type
             opType += OllirTools.getOllirType(var.a.getType().getName());
@@ -262,22 +265,20 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
             int index = this.symbolTable.getParameters(this.exploredMethod).indexOf(var.a) + 1; // could give an error
             if (index < 1) return new OllirTools("", "", "");
             code += "$" + (index) +  "." + var.a.getName() + "." + opType;
+            signalIdentifier = true;
         } else if (var.b == 'f') {
             // get the variable type
             opType += OllirTools.getOllirType(var.a.getType().getName());
             // create a temporary variable to store the result of the operation
-            this.tempVarCount++;
-            preCode += s + OllirTools.tempVarToString(this.tempVarCount) + "." + opType + " :=." + opType + " " +
-                    "getfield(this, " + var.a.getName() + "." + opType + ")." + opType + ";";
-
-            code += OllirTools.tempVarToString(this.tempVarCount) + "." + opType;
+            code += "getfield(this, " + var.a.getName() + "." + opType + ")." + opType;
         } else if (var.b == 'i') {
             code += var.a.getName();
+            signalIdentifier = true;
         }
 
         // create  resulting OllirTools
         OllirTools res = new OllirTools(preCode, code, opType);
-        res.signalIdentifier();
+        if (signalIdentifier) res.signalIdentifier();
 
         return res;
     }
