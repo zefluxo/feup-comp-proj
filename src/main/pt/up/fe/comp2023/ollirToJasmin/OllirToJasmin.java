@@ -260,7 +260,7 @@ public class OllirToJasmin implements JasminBackend {
             case DIV -> {
                 jasminOperation.append("idiv");
             }
-            case AND -> {
+            case ANDB -> {
                 jasminOperation.append("iand");
             }
             case LTH -> {
