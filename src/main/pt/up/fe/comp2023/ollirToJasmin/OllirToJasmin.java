@@ -55,7 +55,7 @@ public class OllirToJasmin implements JasminBackend {
                 accessModifier = "protected ";
             }
             case DEFAULT -> {
-                accessModifier = "";    //not sure
+                accessModifier = "";
             }
             default -> throw new IllegalStateException("Unexpected value: " + accessModifiers);
         }
@@ -158,10 +158,10 @@ public class OllirToJasmin implements JasminBackend {
         String methodName = ollirMethod.getMethodName();
         ArrayList<Element> paramList = ollirMethod.getParams();
         Type returnType = ollirMethod.getReturnType();
-        int stackLimit = 99;
-        int localsLimit = 99;
         HashMap<String, Descriptor> varTable = ollirMethod.getVarTable();
         ArrayList<Instruction> listOfInstr = ollirMethod.getInstructions();
+        int stackLimit = 99;
+        int localsLimit = 1 + varTable.size();
 
         // Header
         if (isConstructMethod && methodAccessModifier == AccessModifiers.DEFAULT) {
@@ -281,8 +281,27 @@ public class OllirToJasmin implements JasminBackend {
         Instruction rhs = instruction.getRhs();
         Type typeOfAssign = instruction.getTypeOfAssign();
 
-        jasminAssign.append(instructionToJasmin(rhs, varTable));
-        if (rhs.getInstType() != InstructionType.NOPER) jasminAssign.append('\n');
+        // Increment (i++)
+        boolean isInc = false;
+        if (rhs.getInstType() == InstructionType.BINARYOPER) {
+            Element leftOperand = ((BinaryOpInstruction) rhs).getLeftOperand();
+            Element rightOperand = ((BinaryOpInstruction) rhs).getRightOperand();
+
+            if (!leftOperand.isLiteral() && ((Operand) leftOperand).getName().equals(dest.getName()) && rightOperand.isLiteral() && Integer.parseInt(((LiteralElement) rightOperand).getLiteral()) == 1) {
+                jasminAssign.append(toStack((Operand) leftOperand, varTable));
+                jasminAssign.append("iinc\n");
+                isInc = true;
+            } else if (!rightOperand.isLiteral() && ((Operand) rightOperand).getName().equals(dest.getName()) && leftOperand.isLiteral() && Integer.parseInt(((LiteralElement) leftOperand).getLiteral()) == 1) {
+                jasminAssign.append(toStack((Operand) rightOperand, varTable));
+                jasminAssign.append("iinc\n");
+                isInc = true;
+            }
+        }
+
+        if (!isInc) {
+            jasminAssign.append(instructionToJasmin(rhs, varTable));
+            if (rhs.getInstType() != InstructionType.NOPER) jasminAssign.append('\n');
+        }
 
         int varNum = varTable.get(dest.getName()).getVirtualReg();
         String isShort = " ";
@@ -356,7 +375,6 @@ public class OllirToJasmin implements JasminBackend {
     }
 
     private StringBuilder gotoInstruction(GotoInstruction instruction) {
-        // Wasn't for this checkpoint but it was simple
         return new StringBuilder().append("goto ").append(instruction.getLabel());
     }
 
