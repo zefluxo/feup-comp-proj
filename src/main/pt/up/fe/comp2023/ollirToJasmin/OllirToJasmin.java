@@ -298,10 +298,17 @@ public class OllirToJasmin implements JasminBackend {
             }
         }
 
+        if (dest instanceof ArrayOperand) {
+            jasminAssign.append(toStack(dest, varTable));
+            jasminAssign.append(toStack((Operand) ((ArrayOperand) dest).getIndexOperands().get(0), varTable));
+        }
+
         if (!isInc) {
             jasminAssign.append(instructionToJasmin(rhs, varTable));
             if (rhs.getInstType() != InstructionType.NOPER) jasminAssign.append('\n');
         }
+
+        if (dest instanceof ArrayOperand) return jasminAssign.append("iastore");
 
         int varNum = varTable.get(dest.getName()).getVirtualReg();
         String isShort = " ";
@@ -325,11 +332,13 @@ public class OllirToJasmin implements JasminBackend {
             jasminCall.append(toStack(firstArg, varTable));
         }
 
-        for (Element operand : listOfOperands) {
-            if (operand.isLiteral()) {
-                jasminCall.append(toStack((LiteralElement) operand));
-            } else {
-                jasminCall.append(toStack((Operand) operand, varTable));
+        if (listOfOperands != null) {
+            for (Element operand : listOfOperands) {
+                if (operand.isLiteral()) {
+                    jasminCall.append(toStack((LiteralElement) operand));
+                } else {
+                    jasminCall.append(toStack((Operand) operand, varTable));
+                }
             }
         }
 
@@ -348,10 +357,13 @@ public class OllirToJasmin implements JasminBackend {
                 jasminCall.append("invokestatic ");
             }
             case NEW -> {
+                if (firstArg.getType().getTypeOfElement() == ElementType.ARRAYREF) {
+                    return jasminCall.append("newarray int");
+                }
                 jasminCall.append("new ");
             }
             case arraylength -> {
-                jasminCall.append("arraylength ");
+                return jasminCall.append("arraylength");
             }
             case ldc -> {
                 jasminCall.append("ldc ");
@@ -473,6 +485,11 @@ public class OllirToJasmin implements JasminBackend {
             jasminNOper.append(toStack((LiteralElement) singleOperand));
         } else {
             jasminNOper.append(toStack((Operand) singleOperand, varTable));
+        }
+
+        if (singleOperand instanceof ArrayOperand) {
+            jasminNOper.append(toStack((Operand) ((ArrayOperand) singleOperand).getIndexOperands().get(0), varTable));
+            jasminNOper.append("iaload\n");
         }
 
         return jasminNOper;
