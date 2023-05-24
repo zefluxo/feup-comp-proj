@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.report.Report;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class OllirToJasmin implements JasminBackend {
     public OllirToJasmin() {
@@ -184,6 +185,8 @@ public class OllirToJasmin implements JasminBackend {
         // Instructions
         boolean hasReturn = false;
         for (Instruction instruction : listOfInstr) {
+            List<String> instructionLabel =  ollirMethod.getLabels(instruction);
+            if (!instructionLabel.isEmpty()) jasminMethod.append(instructionLabel.get(0)).append(":\n");
             jasminMethod.append(instructionToJasmin(instruction, varTable));
             if (instruction.getInstType() != InstructionType.NOPER) jasminMethod.append('\n');
             if (instruction.getInstType() == InstructionType.RETURN) hasReturn = true;
