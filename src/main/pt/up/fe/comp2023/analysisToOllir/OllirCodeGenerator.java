@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023.optimization;
+package pt.up.fe.comp2023.analysisToOllir;
 
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
