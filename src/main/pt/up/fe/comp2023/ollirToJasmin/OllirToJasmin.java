@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.report.Report;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class OllirToJasmin implements JasminBackend {
     public OllirToJasmin() {
@@ -55,7 +56,7 @@ public class OllirToJasmin implements JasminBackend {
                 accessModifier = "protected ";
             }
             case DEFAULT -> {
-                accessModifier = "";    //not sure
+                accessModifier = "";
             }
             default -> throw new IllegalStateException("Unexpected value: " + accessModifiers);
         }
@@ -158,10 +159,10 @@ public class OllirToJasmin implements JasminBackend {
         String methodName = ollirMethod.getMethodName();
         ArrayList<Element> paramList = ollirMethod.getParams();
         Type returnType = ollirMethod.getReturnType();
-        int stackLimit = 99;
-        int localsLimit = 99;
         HashMap<String, Descriptor> varTable = ollirMethod.getVarTable();
         ArrayList<Instruction> listOfInstr = ollirMethod.getInstructions();
+        int stackLimit = 99;
+        int localsLimit = 1 + varTable.size();
 
         // Header
         if (isConstructMethod && methodAccessModifier == AccessModifiers.DEFAULT) {
@@ -184,6 +185,8 @@ public class OllirToJasmin implements JasminBackend {
         // Instructions
         boolean hasReturn = false;
         for (Instruction instruction : listOfInstr) {
+            List<String> instructionLabel =  ollirMethod.getLabels(instruction);
+            if (!instructionLabel.isEmpty()) jasminMethod.append(instructionLabel.get(0)).append(":\n");
             jasminMethod.append(instructionToJasmin(instruction, varTable));
             if (instruction.getInstType() != InstructionType.NOPER) jasminMethod.append('\n');
             if (instruction.getInstType() == InstructionType.RETURN) hasReturn = true;
@@ -281,8 +284,34 @@ public class OllirToJasmin implements JasminBackend {
         Instruction rhs = instruction.getRhs();
         Type typeOfAssign = instruction.getTypeOfAssign();
 
-        jasminAssign.append(instructionToJasmin(rhs, varTable));
-        if (rhs.getInstType() != InstructionType.NOPER) jasminAssign.append('\n');
+        // Increment (i++)
+        boolean isInc = false;
+        if (rhs.getInstType() == InstructionType.BINARYOPER) {
+            Element leftOperand = ((BinaryOpInstruction) rhs).getLeftOperand();
+            Element rightOperand = ((BinaryOpInstruction) rhs).getRightOperand();
+
+            if (!leftOperand.isLiteral() && ((Operand) leftOperand).getName().equals(dest.getName()) && rightOperand.isLiteral() && Integer.parseInt(((LiteralElement) rightOperand).getLiteral()) == 1) {
+                jasminAssign.append(toStack((Operand) leftOperand, varTable));
+                jasminAssign.append("iinc\n");
+                isInc = true;
+            } else if (!rightOperand.isLiteral() && ((Operand) rightOperand).getName().equals(dest.getName()) && leftOperand.isLiteral() && Integer.parseInt(((LiteralElement) leftOperand).getLiteral()) == 1) {
+                jasminAssign.append(toStack((Operand) rightOperand, varTable));
+                jasminAssign.append("iinc\n");
+                isInc = true;
+            }
+        }
+
+        if (dest instanceof ArrayOperand) {
+            jasminAssign.append(toStack(dest, varTable));
+            jasminAssign.append(toStack((Operand) ((ArrayOperand) dest).getIndexOperands().get(0), varTable));
+        }
+
+        if (!isInc) {
+            jasminAssign.append(instructionToJasmin(rhs, varTable));
+            if (rhs.getInstType() != InstructionType.NOPER) jasminAssign.append('\n');
+        }
+
+        if (dest instanceof ArrayOperand) return jasminAssign.append("iastore");
 
         int varNum = varTable.get(dest.getName()).getVirtualReg();
         String isShort = " ";
@@ -306,11 +335,13 @@ public class OllirToJasmin implements JasminBackend {
             jasminCall.append(toStack(firstArg, varTable));
         }
 
-        for (Element operand : listOfOperands) {
-            if (operand.isLiteral()) {
-                jasminCall.append(toStack((LiteralElement) operand));
-            } else {
-                jasminCall.append(toStack((Operand) operand, varTable));
+        if (listOfOperands != null) {
+            for (Element operand : listOfOperands) {
+                if (operand.isLiteral()) {
+                    jasminCall.append(toStack((LiteralElement) operand));
+                } else {
+                    jasminCall.append(toStack((Operand) operand, varTable));
+                }
             }
         }
 
@@ -329,10 +360,13 @@ public class OllirToJasmin implements JasminBackend {
                 jasminCall.append("invokestatic ");
             }
             case NEW -> {
+                if (firstArg.getType().getTypeOfElement() == ElementType.ARRAYREF) {
+                    return jasminCall.append("newarray int");
+                }
                 jasminCall.append("new ");
             }
             case arraylength -> {
-                jasminCall.append("arraylength ");
+                return jasminCall.append("arraylength");
             }
             case ldc -> {
                 jasminCall.append("ldc ");
@@ -356,7 +390,6 @@ public class OllirToJasmin implements JasminBackend {
     }
 
     private StringBuilder gotoInstruction(GotoInstruction instruction) {
-        // Wasn't for this checkpoint but it was simple
         return new StringBuilder().append("goto ").append(instruction.getLabel());
     }
 
@@ -455,6 +488,11 @@ public class OllirToJasmin implements JasminBackend {
             jasminNOper.append(toStack((LiteralElement) singleOperand));
         } else {
             jasminNOper.append(toStack((Operand) singleOperand, varTable));
+        }
+
+        if (singleOperand instanceof ArrayOperand) {
+            jasminNOper.append(toStack((Operand) ((ArrayOperand) singleOperand).getIndexOperands().get(0), varTable));
+            jasminNOper.append("iaload\n");
         }
 
         return jasminNOper;
