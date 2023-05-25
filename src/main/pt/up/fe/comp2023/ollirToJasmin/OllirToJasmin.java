@@ -17,12 +17,14 @@ public class OllirToJasmin implements JasminBackend {
         this.className = "";
         this.superClass = "java/lang/Object";
         this.imports = new ArrayList<>();
+        this.numberOfConditions = 0;
     }
     StringBuilder jasminCode;
     ArrayList<Report> reports;
     String className;
     String superClass;
     ArrayList<String> imports;
+    int numberOfConditions;
 
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
@@ -292,11 +294,13 @@ public class OllirToJasmin implements JasminBackend {
 
             if (!leftOperand.isLiteral() && ((Operand) leftOperand).getName().equals(dest.getName()) && rightOperand.isLiteral() && Integer.parseInt(((LiteralElement) rightOperand).getLiteral()) == 1) {
                 jasminAssign.append(toStack((Operand) leftOperand, varTable));
-                jasminAssign.append("iinc\n");
+                int varNum = varTable.get(((Operand) leftOperand).getName()).getVirtualReg();
+                jasminAssign.append("iinc ").append(varNum).append(" 1\n");
                 isInc = true;
             } else if (!rightOperand.isLiteral() && ((Operand) rightOperand).getName().equals(dest.getName()) && leftOperand.isLiteral() && Integer.parseInt(((LiteralElement) leftOperand).getLiteral()) == 1) {
                 jasminAssign.append(toStack((Operand) rightOperand, varTable));
-                jasminAssign.append("iinc\n");
+                int varNum = varTable.get(((Operand) rightOperand).getName()).getVirtualReg();
+                jasminAssign.append("iinc ").append(varNum).append(" 1\n");
                 isInc = true;
             }
         }
@@ -331,7 +335,7 @@ public class OllirToJasmin implements JasminBackend {
         Type returnType = instruction.getReturnType();
         Type firstArgClassType = firstArg.getType();
 
-        if (invocationType == CallType.invokespecial || invocationType == CallType.invokevirtual) {
+        if (invocationType == CallType.invokespecial || invocationType == CallType.invokevirtual || invocationType == CallType.arraylength) {
             jasminCall.append(toStack(firstArg, varTable));
         }
 
@@ -395,8 +399,46 @@ public class OllirToJasmin implements JasminBackend {
 
     private StringBuilder branchInstruction(CondBranchInstruction instruction, HashMap<String, Descriptor> varTable) {
         StringBuilder jasminBranch = new StringBuilder();
+        String label = instruction.getLabel();
+        List<Element> operands = instruction.getOperands();
+        Element firstOp = operands.get(0);
+        boolean firstIsZero = false;
+        StringBuilder firstOpString;
 
-        //TODO
+        if (firstOp.isLiteral()) {
+            if (((LiteralElement) firstOp).getLiteral().equals("0")) firstIsZero = true;
+            firstOpString = toStack((LiteralElement) firstOp);
+        } else {
+            if (varTable.get(((Operand) firstOp).getName()).getVirtualReg() == 0) firstIsZero = true;
+            firstOpString = toStack((Operand) firstOp, varTable);
+        }
+
+        if (instruction instanceof OpCondInstruction) {
+            Element secondOp = operands.get(1);
+            boolean secondIsZero = false;
+            StringBuilder secondOpString;
+
+            if (secondOp.isLiteral()) {
+                if (((LiteralElement) secondOp).getLiteral().equals("0")) secondIsZero = true;
+                secondOpString = toStack((LiteralElement) secondOp);
+            } else {
+                if (varTable.get(((Operand) secondOp).getName()).getVirtualReg() == 0) secondIsZero = true;
+                secondOpString = toStack((Operand) secondOp, varTable);
+            }
+
+            if (firstIsZero) {
+                jasminBranch.append(secondOpString).append("ifgt ");
+            } else if (secondIsZero) {
+                jasminBranch.append(firstOpString).append("igle ");
+            } else {
+                jasminBranch.append(firstOpString).append(secondOpString).append("if_icmplt ");
+            }
+        } else if (instruction instanceof SingleOpCondInstruction) {
+            jasminBranch.append(firstOpString);
+            jasminBranch.append("ifne ");
+        }
+
+        jasminBranch.append(label);
 
         return jasminBranch;
     }
@@ -446,6 +488,7 @@ public class OllirToJasmin implements JasminBackend {
         StringBuilder jasminUnaryOper = new StringBuilder();
         Element operand = instruction.getOperand();
         OperationType operationType = instruction.getOperation().getOpType();
+        boolean isBooleanOp = instruction.getOperation().getTypeInfo().getTypeOfElement() == ElementType.BOOLEAN;
 
         if (operand.isLiteral()) {
             jasminUnaryOper.append(toStack((LiteralElement) operand));
@@ -453,7 +496,9 @@ public class OllirToJasmin implements JasminBackend {
             jasminUnaryOper.append(toStack((Operand) operand, varTable));
         }
 
-        jasminUnaryOper.append(operationToJasmin(operationType)).append('\n');
+        jasminUnaryOper.append(operationToJasmin(operationType));
+
+        if (isBooleanOp) jasminUnaryOper.append(getCondition());
 
         return jasminUnaryOper;
     }
@@ -463,21 +508,60 @@ public class OllirToJasmin implements JasminBackend {
         Element leftOperand = instruction.getLeftOperand();
         Element rightOperand = instruction.getRightOperand();
         OperationType operationType = instruction.getOperation().getOpType();
+        boolean isBooleanOp = instruction.getOperation().getTypeInfo().getTypeOfElement() == ElementType.BOOLEAN;
+        StringBuilder firstOpString;
+        StringBuilder secondOpString;
+        boolean firstIsZero = false;
+        boolean secondIsZero = false;
 
         if (leftOperand.isLiteral()) {
-            jasminBinaryOper.append(toStack((LiteralElement) leftOperand));
+            if (((LiteralElement) leftOperand).getLiteral().equals("0")) firstIsZero = true;
+            firstOpString = toStack((LiteralElement) leftOperand);
         } else {
-            jasminBinaryOper.append(toStack((Operand) leftOperand, varTable));
+            if (varTable.get(((Operand) leftOperand).getName()).getVirtualReg() == 0) firstIsZero = true;
+            firstOpString = toStack((Operand) leftOperand, varTable);
         }
         if (rightOperand.isLiteral()) {
-            jasminBinaryOper.append(toStack((LiteralElement) rightOperand));
+            if (((LiteralElement) rightOperand).getLiteral().equals("0")) secondIsZero = true;
+            secondOpString = toStack((LiteralElement) rightOperand);
         } else {
-            jasminBinaryOper.append(toStack((Operand) rightOperand, varTable));
+            if (varTable.get(((Operand) rightOperand).getName()).getVirtualReg() == 0) secondIsZero = true;
+            secondOpString = toStack((Operand) rightOperand, varTable);
         }
 
-        jasminBinaryOper.append(operationToJasmin(operationType));
+        if (!isBooleanOp) {
+            jasminBinaryOper.append(firstOpString).append(secondOpString);
+            jasminBinaryOper.append(operationToJasmin(operationType));
+        } else {
+            if (operationType == OperationType.ANDB) {
+                jasminBinaryOper.append(firstOpString).append(secondOpString).append("iand");
+            } else {
+                if (firstIsZero) {
+                    jasminBinaryOper.append(secondOpString).append("ifgt");
+                } else if (secondIsZero) {
+                    jasminBinaryOper.append(firstOpString).append("igle");
+                } else {
+                    jasminBinaryOper.append(firstOpString).append(secondOpString).append("if_icmplt");
+                }
+                jasminBinaryOper.append(getCondition());
+            }
+        }
 
         return jasminBinaryOper;
+    }
+
+    private StringBuilder getCondition() {
+        StringBuilder condition = new StringBuilder();
+        condition.append(" FALSE").append(this.numberOfConditions).append("\n");
+        condition.append("iconst_1\n");
+        condition.append("goto END").append(this.numberOfConditions).append("\n");
+        condition.append("FALSE").append(this.numberOfConditions).append(":\n");
+        condition.append("iconst_0\n");
+        condition.append("END").append(this.numberOfConditions).append(":");
+
+        this.numberOfConditions++;
+
+        return condition;
     }
 
     private StringBuilder nOperInstruction(SingleOpInstruction instruction, HashMap<String, Descriptor> varTable) {
