@@ -1,12 +1,11 @@
-package pt.up.fe.comp2023;
+package pt.up.fe.comp2023.optimization;
 
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
-import pt.up.fe.comp2023.symbolTable.entities.Method;
+import pt.up.fe.comp2023.SimpleSymbolTable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTools> {
@@ -224,11 +223,22 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         }
 
         // create operation code
+        // determine the operation type
+        if (jmmNode.get("op").equals("+") || jmmNode.get("op").equals("/") || jmmNode.get("op").equals("*") || jmmNode.get("op").equals("-")) {
+            opType = leftOllirTools.getOpType();
+        } else {
+            opType = OllirTools.getOllirType("boolean");
+        }
+
         String operator = jmmNode.get("op");
         code += leftCode + " " + operator + "." + leftOllirTools.getOpType() + " " + rightCode;
 
         // determine the operation type
-        opType = leftOllirTools.getOpType();
+        if (jmmNode.get("op").equals("+") || jmmNode.get("op").equals("/") || jmmNode.get("op").equals("*") || jmmNode.get("op").equals("-")) {
+            opType = leftOllirTools.getOpType();
+        } else {
+            opType = OllirTools.getOllirType("boolean");
+        }
 
         // create  resulting OllirTools
         OllirTools res = new OllirTools(preCode, code, opType);

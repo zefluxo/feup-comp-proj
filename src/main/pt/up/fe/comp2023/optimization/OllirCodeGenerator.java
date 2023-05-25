@@ -1,9 +1,10 @@
-package pt.up.fe.comp2023;
+package pt.up.fe.comp2023.optimization;
 
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2023.SimpleSymbolTable;
 
 import java.util.List;
 
@@ -102,12 +103,16 @@ public class OllirCodeGenerator extends AJmmVisitor<String, String> {
         String s2 = s + "\t";
         for (JmmNode child : jmmNode.getChildren()) {
             if (child.getKind().equals("Expr") || child.getKind().equals("Assignment")
-                    || child.getKind().equals("MethodStatement")) {
+                    || child.getKind().equals("MethodStatement") || child.getKind().equals("IfStatement")
+                    || child.getKind().equals("WhileStatement") || child.getKind().equals("ArrayAssignment")) {
                 OllirStatementGenerator ollirStatementGenerator = new OllirStatementGenerator(child, symbolTable, "main", tempVarCounter);
                 ret += ollirStatementGenerator.generateOllir(s2) + "\n";
                 tempVarCounter = ollirStatementGenerator.getTempVarCounter();
             }
         }
+
+        // return
+        ret += s + "ret.V;\n";
 
         ret += s + "}";
 
@@ -136,7 +141,8 @@ public class OllirCodeGenerator extends AJmmVisitor<String, String> {
         String s2 = s + "\t";
         for (JmmNode child : jmmNode.getChildren()) {
             if (child.getKind().equals("Expr") || child.getKind().equals("Assignment")
-                    || child.getKind().equals("MethodStatement")) {
+                    || child.getKind().equals("MethodStatement") || child.getKind().equals("IfStatement")
+                    || child.getKind().equals("WhileStatement") || child.getKind().equals("ArrayAssignment")) {
                 OllirStatementGenerator ollirStatementGenerator = new OllirStatementGenerator(child, symbolTable, jmmNode.get("methodName"), tempVarCounter);
                 ret += ollirStatementGenerator.generateOllir(s2) + "\n";
                 tempVarCounter = ollirStatementGenerator.getTempVarCounter();

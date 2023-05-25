@@ -12,6 +12,7 @@ import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2023.ollirToJasmin.OllirToJasmin;
+import pt.up.fe.comp2023.optimization.OllirCodeGenerator;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -68,8 +69,11 @@ public class Launcher {
             System.exit(-1);
         }
 
+        System.out.println(semanticsResult.getRootNode().toTree());
+        System.exit(0);
+
         // Generate OLLIR
-        OllirCodeGenerator ollirCodeGenerator = new OllirCodeGenerator(parserResult.getRootNode(), symbolTable);
+        OllirCodeGenerator ollirCodeGenerator = new OllirCodeGenerator(semanticsResult.getRootNode(), symbolTable);
         String ollirString = ollirCodeGenerator.generateOllir();
         System.out.println(ollirString);
 
