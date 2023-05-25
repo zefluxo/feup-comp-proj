@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023.optimization;
+package pt.up.fe.comp2023.analysisToOllir;
 
 public class OllirTools {
     private String preCode;

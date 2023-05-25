@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023.optimization;
+package pt.up.fe.comp2023.analysisToOllir;
 
 import org.antlr.v4.runtime.misc.Pair;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;

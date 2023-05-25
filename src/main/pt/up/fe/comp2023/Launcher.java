@@ -2,7 +2,6 @@ package pt.up.fe.comp2023;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,8 +10,6 @@ import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-import pt.up.fe.comp2023.ollirToJasmin.OllirToJasmin;
-import pt.up.fe.comp2023.optimization.OllirCodeGenerator;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -69,19 +66,15 @@ public class Launcher {
             System.exit(-1);
         }
 
-        System.out.println(semanticsResult.getRootNode().toTree());
-        System.exit(0);
-
         // Generate OLLIR
-        OllirCodeGenerator ollirCodeGenerator = new OllirCodeGenerator(semanticsResult.getRootNode(), symbolTable);
-        String ollirString = ollirCodeGenerator.generateOllir();
-        System.out.println(ollirString);
+        SimpleOllir ollir = new SimpleOllir();
+        OllirResult ollirResult = ollir.toOllir(semanticsResult);
+        System.out.println(ollirResult.getOllirCode());
 
         // Generate Jasmin
-        OllirResult ollirResult = new OllirResult(ollirString, Collections.emptyMap());
-        OllirToJasmin ollirToJasmin = new OllirToJasmin();
-        JasminResult jasmin = ollirToJasmin.toJasmin(ollirResult);
-        System.out.println(jasmin.getJasminCode());
+        SimpleBackend jasmin = new SimpleBackend();
+        JasminResult jasminResult = jasmin.toJasmin(ollirResult);
+        System.out.println(jasminResult.getJasminCode());
     }
 
     private static Map<String, String> parseArgs(String[] args) {
