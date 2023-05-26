@@ -58,6 +58,8 @@ public class Launcher {
         SimpleAnalysis analysis = new SimpleAnalysis();
         JmmSemanticsResult semanticsResult = analysis.semanticAnalysis(parserResult);
 
+        System.out.println(semanticsResult.getRootNode().toTree());
+
         // Check for semantic errors
         try {
             TestUtils.noErrors(semanticsResult.getReports());

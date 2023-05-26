@@ -9,6 +9,7 @@ import pt.up.fe.specs.util.SpecsCollections;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class SimpleAnalysis implements JmmAnalysis {
     @Override

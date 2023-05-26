@@ -31,14 +31,19 @@ public class Constant {
     }
 
     @Override
+    public String toString() {
+        return String.format("{%s, %s}", local.toString(), value);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Constant constant)) return false;
-        return value == constant.value && local.equals(constant.local) && method.equals(constant.method);
+        return local.equals(constant.local) && method.equals(constant.method);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value, local, method);
+        return Objects.hash(local, method);
     }
 }

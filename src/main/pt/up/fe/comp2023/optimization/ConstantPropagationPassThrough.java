@@ -17,16 +17,21 @@ public class ConstantPropagationPassThrough extends PreorderJmmVisitor<SimpleSym
     private List<String> localNames;
     public HashMap<Constant, Integer> numOfAssignments;
 
+    public ConstantPropagationPassThrough() {
+        this.numOfAssignments = new HashMap<>();
+    }
+
     @Override
     protected void buildVisitor() {
         addVisit("FuncDeclaration", this::dealWithMethodDeclaration);
         addVisit("MainFuncDeclaration", this::dealWithMethodDeclaration);
+        addVisit("Assignment", this::dealWithAssignment);
         setDefaultValue(ArrayList::new);
     }
 
     private List<Symbol> dealWithMethodDeclaration(JmmNode node, SimpleSymbolTable symbolTable) {
 
-        String methodName = node.get("methodName");
+        String methodName = node.getKind().equals("FuncDeclaration") ? node.get("methodName") : "main";
         this.methodName = methodName;
         this.locals = symbolTable.getMethod(methodName)
                                  .getLocalVariables();
@@ -42,24 +47,16 @@ public class ConstantPropagationPassThrough extends PreorderJmmVisitor<SimpleSym
     private List<Symbol> dealWithAssignment(JmmNode node, SimpleSymbolTable symbolTable) {
 
         String varName = node.get("varName");
+        JmmNode rhs = node.getJmmChild(0);
 
-        if (!localNames.contains(varName)) return locals;
-        if (node.get("isArray").equals("true")) return locals;
+        if (!rhs.getKind().equals("Integer")) return locals;
 
         Symbol local = this.locals.stream()
                                   .filter(l -> varName.equals(l.getName()))
                                   .findAny()
                                   .orElse(null);
 
-        String type = node.get("type");
-        String expectedNodeType = switch (type) {
-            case "int" -> "Integer";
-            case "boolean" -> "Boolean";
-            default -> null;
-        };
-
-        if (!node.getKind().equals(expectedNodeType)) return locals;
-        String value = node.get("val");
+        String value = rhs.get("val");
 
         Constant possibleConstant = new Constant(value, local, this.methodName);
         if (numOfAssignments.putIfAbsent(possibleConstant, 1) != null) {
