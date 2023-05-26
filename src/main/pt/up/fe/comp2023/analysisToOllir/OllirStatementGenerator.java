@@ -31,7 +31,7 @@ public class OllirStatementGenerator extends AJmmVisitor<String, String> {
         addVisit("WhileStatement", this::dealWithWhileStatement);
         addVisit("Expr", this::dealWithExpr);
         addVisit("Assignment", this::dealWithAssignment);
-        //addVisit("ThisArrayAssignment", this::dealWithThisArrayAssignment);
+        addVisit("ArrayAssignment", this::dealWithArrayAssignment);
     }
 
     private String dealWithMethodStatement(JmmNode jmmNode, String s) {
@@ -159,7 +159,12 @@ public class OllirStatementGenerator extends AJmmVisitor<String, String> {
         Pair<Symbol, Character> var = this.symbolTable.findVariable(jmmNode.get("varName"), this.exploredMethod);
         if ( var == null ) return "";
 
-        String type = OllirTools.getOllirType(var.a.getType().getName());
+        String type = "";
+        if(var.a.getType().isArray()) {
+            type += "array.";
+        }
+        type += OllirTools.getOllirType(var.a.getType().getName());
+
         if (var.b == 'l') {
             ret += s + var.a.getName() + "." + type + " :=." + type + " " + ollirTools.getCode() + ";";
         } else if (var.b == 'p') {
@@ -180,10 +185,9 @@ public class OllirStatementGenerator extends AJmmVisitor<String, String> {
         return ret;
     }
 
-    /*
-    private String dealWithThisArrayAssignment(JmmNode jmmNode, String s) {
+    private String dealWithArrayAssignment(JmmNode jmmNode, String s) {
         s = (s != null ? s : "");
-        StringBuilder ret = new StringBuilder();
+        String ret = "";
 
         // expand first expression
         OllirExpressionGenerator ollirExpressionGenerator = new OllirExpressionGenerator(jmmNode.getJmmChild(0), this.symbolTable, this.exploredMethod, tempVarCounter);
@@ -197,10 +201,22 @@ public class OllirStatementGenerator extends AJmmVisitor<String, String> {
 
         // write preCode
         if (ollirToolsFirst.getPreCode() != "") {
-            ret.append(ollirToolsFirst.getPreCode()).append("\n");
+            ret += ollirToolsFirst.getPreCode() + "\n";
         }
         if (ollirToolsSecond.getPreCode() != "") {
-            ret.append(ollirToolsSecond.getPreCode()).append("\n");
+            ret += ollirToolsSecond.getPreCode() + "\n";
+        }
+
+        // check variable
+        Pair<Symbol, Character> varInfo = this.symbolTable.findVariable(jmmNode.get("varName"), this.exploredMethod);
+        String var;
+
+        if (varInfo.b.equals('p')) {
+            int index = this.symbolTable.getParameters(this.exploredMethod).indexOf(varInfo.a) + 1; // could give an error
+            if (index < 1) return "";
+            var = "$" + index + "." + varInfo.a.getName();
+        } else {
+            var = varInfo.a.getName();
         }
 
         // check if first expression is terminal
@@ -208,13 +224,14 @@ public class OllirStatementGenerator extends AJmmVisitor<String, String> {
             this.tempVarCounter++;
             String tempVar = "t" + this.tempVarCounter;
             String type = ollirToolsFirst.getOpType();
-            ret.append(s).append(tempVar).append(".").append(type).append(" :=.").append(type).append(" ").append(ollirToolsFirst.getCode()).append(";\n");
-            ret.append(s).append("aload(").append(tempVar).append(".").append(type).append(").V;\n");
+            ret += s + tempVar + "." + type + " :=." + type + " " + ollirToolsFirst.getCode() + ";\n";
+            ret += s + var + "[" + tempVar + "." + type + "].i32" + " :=.i32 " + ollirToolsSecond.getCode() + ";";
         } else {
-            ret.append(s).append("aload(").append(ollirToolsFirst.getCode()).append(").V;\n");
+            ret += s + var + "[" + ollirToolsFirst.getCode() + "].i32" + " :=.i32 " + ollirToolsSecond.getCode() + ";";
         }
+
+        return ret;
     }
-    */
 
     public int getTempVarCounter() {
         return tempVarCounter;

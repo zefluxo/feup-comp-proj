@@ -15,7 +15,7 @@ public class SimpleOllir implements JmmOptimization {
         SimpleSymbolTable symbolTable = new SimpleSymbolTable(jmmSemanticsResult.getRootNode());
 
         var config = jmmSemanticsResult.getConfig();
-        //if (config.containsKey("optimize") && config.get("optimize").equals("true")) {
+        if (config.containsKey("optimize") && config.get("optimize").equals("true")) {
 
             ConstantPropagation visitor = new ConstantPropagation(jmmSemanticsResult.getRootNode(), symbolTable);
 
@@ -33,7 +33,7 @@ public class SimpleOllir implements JmmOptimization {
             System.out.println(visitor.getRoot().toTree());
             System.exit(0);
 
-        //}
+        }
 
         OllirCodeGenerator codeGenerator = new OllirCodeGenerator(jmmSemanticsResult.getRootNode(), (SimpleSymbolTable) jmmSemanticsResult.getSymbolTable());
         String ollirCode = codeGenerator.generateOllir();

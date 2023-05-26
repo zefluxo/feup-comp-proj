@@ -112,7 +112,7 @@ public class OllirCodeGenerator extends AJmmVisitor<String, String> {
         }
 
         // return
-        ret += s + "ret.V;\n";
+        ret += s2 + "ret.V;\n";
 
         ret += s + "}";
 
@@ -134,7 +134,12 @@ public class OllirCodeGenerator extends AJmmVisitor<String, String> {
             }
             ret = ret.substring(0, ret.length() - 2);
         }
-        ret += ")." + OllirTools.getOllirType(this.symbolTable.getReturnType(jmmNode.get("methodName")).getName()) + " {\n";
+        Type returnType = this.symbolTable.getReturnType(jmmNode.get("methodName"));
+        if (returnType.isArray())
+            ret += ").array." + OllirTools.getOllirType(returnType.getName()) + " {\n";
+        else
+            ret += ")." + OllirTools.getOllirType(returnType.getName()) + " {\n";
+
 
         // Method Body
         int tempVarCounter = 0;
