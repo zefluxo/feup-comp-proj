@@ -1,69 +1,49 @@
 package pt.up.fe.comp2023.optimization;
 
-import pt.up.fe.comp.jmm.analysis.table.Symbol;
+import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
-import pt.up.fe.comp2023.SimpleSymbolTable;
 
-import java.util.ArrayList;
+
 import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
 
-public class ConstantPropagationPassThrough extends PreorderJmmVisitor<SimpleSymbolTable, List<Symbol>> {
+public class ConstantPropagationPassThrough extends AJmmVisitor<String, String> {
 
-    private String methodName;
-    private List<Symbol> locals;
-    private List<String> localNames;
-    public HashMap<Constant, Integer> numOfAssignments;
+    public HashMap<String, JmmNode> constants;
 
     public ConstantPropagationPassThrough() {
-        this.numOfAssignments = new HashMap<>();
+        this.constants = new HashMap<>();
     }
 
     @Override
     protected void buildVisitor() {
-        addVisit("FuncDeclaration", this::dealWithMethodDeclaration);
-        addVisit("MainFuncDeclaration", this::dealWithMethodDeclaration);
         addVisit("Assignment", this::dealWithAssignment);
-        setDefaultValue(ArrayList::new);
+        setDefaultVisit(this::dealWithDefault);
     }
 
-    private List<Symbol> dealWithMethodDeclaration(JmmNode node, SimpleSymbolTable symbolTable) {
+    private String dealWithDefault(JmmNode node, String s) {
 
-        String methodName = node.getKind().equals("FuncDeclaration") ? node.get("methodName") : "main";
-        this.methodName = methodName;
-        this.locals = symbolTable.getMethod(methodName)
-                                 .getLocalVariables();
+        for (JmmNode child: node.getChildren()) {
+            visit(child, "");
+        }
 
-        this.localNames = locals.stream()
-                                .map(symbol -> symbol.getName())
-                                .collect(Collectors.toList());
-
-        return locals;
-
+        return "";
     }
 
-    private List<Symbol> dealWithAssignment(JmmNode node, SimpleSymbolTable symbolTable) {
 
+    private String dealWithAssignment(JmmNode node, String s) {
         String varName = node.get("varName");
         JmmNode rhs = node.getJmmChild(0);
 
-        if (!rhs.getKind().equals("Integer")) return locals;
+        System.out.println(node);
 
-        Symbol local = this.locals.stream()
-                                  .filter(l -> varName.equals(l.getName()))
-                                  .findAny()
-                                  .orElse(null);
+        if (!constants.containsKey(varName)) {
 
-        String value = rhs.get("val");
+            if (!rhs.getKind().equals("Integer")) return "";
+            constants.put(varName, rhs);
 
-        Constant possibleConstant = new Constant(value, local, this.methodName);
-        if (numOfAssignments.putIfAbsent(possibleConstant, 1) != null) {
-            numOfAssignments.put(possibleConstant, numOfAssignments.get(possibleConstant) + 1);
-        }
+        } else constants.remove(varName);
 
-        return locals;
+        return "";
 
     }
 }

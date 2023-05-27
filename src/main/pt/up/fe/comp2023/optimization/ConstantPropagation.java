@@ -1,139 +1,85 @@
 package pt.up.fe.comp2023.optimization;
 
-import pt.up.fe.comp.jmm.analysis.table.Symbol;
+import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
-import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
-import pt.up.fe.comp.jmm.report.Report;
-import pt.up.fe.comp2023.SimpleOllir;
-import pt.up.fe.comp2023.SimpleSymbolTable;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-public class ConstantPropagation extends PreorderJmmVisitor<SimpleSymbolTable, List<Constant>> {
+public class ConstantPropagation extends AJmmVisitor<String, String> {
 
     public boolean hasChanged = false;
-    private JmmNode root;
-    private List<Constant> constants;
-    private List<Constant> currMethodConstants;
+    private final JmmNode root;
+    private final Map<String, JmmNode> constants;
 
-    public ConstantPropagation(JmmNode root, SimpleSymbolTable symbolTable) {
+    public ConstantPropagation(JmmNode root) {
 
         ConstantPropagationPassThrough constantGetter = new ConstantPropagationPassThrough();
-        constantGetter.visit(root, symbolTable);
+        constantGetter.visit(root, "");
 
         this.root = root;
-        this.constants = constantGetter
-                        .numOfAssignments
-                        .entrySet().stream()
-                        .filter(entry -> (entry.getValue() == 1))
-                        .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue))
-                        .keySet().stream().collect(Collectors.toList());
+        this.constants = new HashMap<>(constantGetter.constants);
 
-        constants.forEach(constant -> System.out.println(constant));
+        System.out.println(constants);
 
     }
 
     @Override
     protected void buildVisitor() {
 
-        addVisit("FuncDeclaration", this::dealWithMethodDeclaration);
-        addVisit("MainFuncDeclaration", this::dealWithMethodDeclaration);
-        addVisit("VarDeclaration", this::dealWithVarDeclaration);
-        addVisit("Assignment", this::dealWithAssignment);
+        addVisit("IfStatement", this::dealWithWhileAndIfStatement);
+        addVisit("WhileStatement", this::dealWithWhileAndIfStatement);
         addVisit("Identifier", this::dealWithIdentifier);
-
-        setDefaultValue(ArrayList::new);
-
-    }
-
-    private List<Constant> dealWithMethodDeclaration(JmmNode node, SimpleSymbolTable symbolTable) {
-
-        String methodName = node.getKind().equals("FuncDeclaration") ? node.get("methodName") : "main";
-        this.currMethodConstants = constants.stream()
-                                            .filter(constant -> constant.getMethod().equals(methodName))
-                                            .collect(Collectors.toList());
-
-        return constants;
+        setDefaultVisit(this::dealWithDefault);
 
     }
 
-    private List<Constant> dealWithVarDeclaration(JmmNode node, SimpleSymbolTable symbolTable) {
+    private String dealWithDefault(JmmNode node, String s) {
 
-        if (node.hasAttribute("visited")) return constants;
-
-        String varName = node.get("varName");
-        for (Constant constant: currMethodConstants) {
-
-            if (constant.getLocal().getName().equals(varName)) {
-
-                for (JmmNode child: node.getChildren()) { child.delete(); }
-
-                node.delete();
-                break;
-
-            }
-
+        for (JmmNode child: node.getChildren()) {
+            visit(child , "");
         }
 
-        return constants;
+        return "";
 
     }
 
-    private List<Constant> dealWithAssignment(JmmNode node, SimpleSymbolTable symbolTable) {
+    private String dealWithWhileAndIfStatement(JmmNode node, String s) {
 
-        String varName = node.get("varName");
-        for (Constant constant: currMethodConstants) {
+        JmmNode brackets = node.getJmmChild(1);
+        ConstantPropagation whileVisitor = new ConstantPropagation(brackets);
 
-            if (constant.getLocal().getName().equals(varName) &&
-                !constant.getValue().equals("")) {
+        do {
 
-                JmmNode parent = node.getJmmParent();
-                parent.removeJmmChild(node);
-                this.hasChanged = true;
-                break;
-
+            for (JmmNode child : brackets.getChildren()) {
+                whileVisitor.visit(child);
             }
+            whileVisitor = new ConstantPropagation(brackets);
 
+        } while (whileVisitor.hasChanged);
+
+        for (JmmNode child: node.getChildren()) {
+            visit(child, "");
         }
 
-        return constants;
+        return "";
     }
 
-    private List<Constant> dealWithIdentifier(JmmNode node, SimpleSymbolTable symbolTable) {
+    private String dealWithIdentifier(JmmNode node, String s) {
 
         String varName = node.get("varName");
-        for (Constant constant: currMethodConstants) {
+        JmmNode constant = constants.get(varName);
 
-            String constantName = constant.getLocal().getName();
-            if (constantName.equals(varName)) {
+        if (constant == null) return "";
 
-                JmmNode parent = node.getJmmParent();
-                if (parent == null) {
-                    System.out.println("Null parent");
-                    break;
-                }
+        node.replace(new JmmNodeImpl(constant.getKind(), constant));
+        return "";
 
-                int index = parent.removeJmmChild(node);
-                JmmNode newChild = new JmmNodeImpl("Integer");
-                newChild.put("val", constant.getValue());
-
-                parent.add(newChild, index);
-                this.hasChanged = true;
-                break;
-
-            }
-
-        }
-
-        return constants;
     }
 
 
-    public JmmNode getRoot() {
-        return root;
-    }
+    public JmmNode getRoot() { return root; }
 }

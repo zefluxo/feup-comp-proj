@@ -17,21 +17,15 @@ public class SimpleOllir implements JmmOptimization {
         var config = jmmSemanticsResult.getConfig();
         if (config.containsKey("optimize") && config.get("optimize").equals("true")) {
 
-            ConstantPropagation visitor = new ConstantPropagation(jmmSemanticsResult.getRootNode(), symbolTable);
+            ConstantPropagation visitor = new ConstantPropagation(jmmSemanticsResult.getRootNode());
 
-            while (true) {
+            do {
 
-                System.out.println("Propagating constants!");
                 visitor.visit(jmmSemanticsResult.getRootNode());
-                if (!visitor.hasChanged) break;
+                visitor = new ConstantPropagation(visitor.getRoot());
 
-                visitor = new ConstantPropagation(visitor.getRoot(), symbolTable);
+            } while (visitor.hasChanged);
 
-            }
-
-            System.out.println("Propagated all constants!");
-            System.out.println(visitor.getRoot().toTree());
-            System.exit(0);
 
         }
 
