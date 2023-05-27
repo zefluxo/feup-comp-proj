@@ -30,6 +30,7 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         addVisit("ArrayAccess", this::dealWithArrayAccess);
         addVisit("ClassMethodCall", this::dealWithClassMethodCall);
         addVisit("LengthOp", this::dealWithLengthOp);
+        addVisit("NotOp", this::dealWithNotOp);
         addVisit("ObjectDeclaration", this::dealWithObjectDeclaration);
         addVisit("ArrayDeclaration", this::dealWithArrayDeclaration);
         addVisit("BinaryOp", this::dealWithBinaryOp);
@@ -226,6 +227,36 @@ public class OllirExpressionGenerator extends PreorderJmmVisitor<String, OllirTo
         }
         else {
             code += "arraylength(" + auxOllirTools.getCode() + ").i32";
+        }
+
+        return new OllirTools(preCode, code, opType);
+    }
+
+    private OllirTools dealWithNotOp(JmmNode jmmNode, String s) {
+        String opType = "bool";
+        String preCode = "";
+        String code = "";
+
+        OllirTools auxOllirTools = visit(jmmNode.getJmmChild(0), s);
+
+        // add preCode
+        if (auxOllirTools.getPreCode() != "") { preCode += auxOllirTools.getPreCode(); }
+
+        // check of terminal expression
+        if (!auxOllirTools.isTerminal()) {
+            // create a temporary variable to store the result of the operation
+            this.tempVarCount++;
+            String tempVar = OllirTools.tempVarToString(tempVarCount) + "." + auxOllirTools.getOpType();
+
+            // add to preCode
+            if (preCode != "") preCode += "\n";
+            preCode += s + tempVar + " :=." + auxOllirTools.getOpType() + " " + auxOllirTools.getCode() + ";";
+
+            // add to code
+            code += "!.bool " + tempVar + ".bool";
+        }
+        else {
+            code += "!.bool " + auxOllirTools.getCode();
         }
 
         return new OllirTools(preCode, code, opType);
