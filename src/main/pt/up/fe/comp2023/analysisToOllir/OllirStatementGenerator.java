@@ -39,7 +39,9 @@ public class OllirStatementGenerator extends AJmmVisitor<String, String> {
         String ret = "";
 
         // expand statement
-        ret += visit(jmmNode.getJmmChild(0), s);
+        if (jmmNode.getNumChildren() > 0) {
+            ret += visit(jmmNode.getJmmChild(0), s);
+        }
 
         return ret;
     }
