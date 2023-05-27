@@ -90,6 +90,17 @@ public class OllirStatementGenerator extends AJmmVisitor<String, String> {
         s = (s != null ? s : "");
         String ret = "";
 
+        // start marker
+        ret += s + "goto while_cond_0;" + "\n";
+        ret += s + "while_body_0:" + "\n";
+
+        // body
+        String s2 = s + "\t";
+        ret += visit(jmmNode.getJmmChild(1), s2) + "\n";
+
+        // condition
+        ret += s + "while_cond_0:" + "\n";
+
         // deal with condition expression
         String condition = "";
         OllirExpressionGenerator ollirExpressionGenerator = new OllirExpressionGenerator(jmmNode.getJmmChild(0), this.symbolTable, this.exploredMethod, tempVarCounter);
@@ -110,16 +121,6 @@ public class OllirStatementGenerator extends AJmmVisitor<String, String> {
             condition = ollirTools.getCode();
         }
 
-        // start marker
-        ret += s + "goto while_cond_0;" + "\n";
-        ret += s + "while_body_0:" + "\n";
-
-        // body
-        String s2 = s + "\t";
-        ret += visit(jmmNode.getJmmChild(1), s2) + "\n";
-
-        // condition
-        ret += s + "while_cond_0:" + "\n";
         ret += s + "if (" + condition + ") goto while_body_0;" + "\n";
 
         return ret;
