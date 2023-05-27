@@ -4,27 +4,33 @@ import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2023.analysisToOllir.OllirCodeGenerator;
+import pt.up.fe.comp2023.optimization.ConstantFolding;
 import pt.up.fe.comp2023.optimization.ConstantPropagation;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class SimpleOllir implements JmmOptimization {
     @Override
     public OllirResult toOllir(JmmSemanticsResult jmmSemanticsResult) {
 
-        SimpleSymbolTable symbolTable = new SimpleSymbolTable(jmmSemanticsResult.getRootNode());
-
         var config = jmmSemanticsResult.getConfig();
         if (config.containsKey("optimize") && config.get("optimize").equals("true")) {
 
-            ConstantPropagation visitor = new ConstantPropagation(jmmSemanticsResult.getRootNode());
+            ConstantPropagation constPropVisitor = new ConstantPropagation(jmmSemanticsResult.getRootNode());
+            ConstantFolding constFoldVisitor = new ConstantFolding(jmmSemanticsResult.getRootNode());
 
             do {
 
-                visitor.visit(jmmSemanticsResult.getRootNode());
-                visitor = new ConstantPropagation(visitor.getRoot());
+                constPropVisitor.visit(constPropVisitor.getRoot());
+                constFoldVisitor.visit(constFoldVisitor.getRoot());
 
-            } while (visitor.hasChanged);
+                if (!constPropVisitor.hasChanged && !constFoldVisitor.hasChanged) break;
+
+                constPropVisitor = new ConstantPropagation(constFoldVisitor.getRoot());
+                constFoldVisitor = new ConstantFolding(constPropVisitor.getRoot());
+
+            } while (true);
 
 
         }
