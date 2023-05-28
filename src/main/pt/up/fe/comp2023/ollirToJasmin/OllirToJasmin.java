@@ -202,7 +202,6 @@ public class OllirToJasmin implements JasminBackend {
             }
         }
         if (!hasReturn) jasminInstructions.append("return\n");
-        else if (returnType.getTypeOfElement() != ElementType.VOID) updateStack(-1);
 
         // Limits
         int localsLimit = Math.max(this.localRegisters.size(), paramList.size()+1);
@@ -306,12 +305,10 @@ public class OllirToJasmin implements JasminBackend {
             if (!leftOperand.isLiteral() && ((Operand) leftOperand).getName().equals(dest.getName()) && rightOperand.isLiteral() && Integer.parseInt(((LiteralElement) rightOperand).getLiteral()) == 1) {
                 int varNum = varTable.get(((Operand) leftOperand).getName()).getVirtualReg();
                 jasminAssign.append("iinc ").append(varNum).append(" 1");
-                updateStack(-1);
                 return jasminAssign;
             } else if (!rightOperand.isLiteral() && ((Operand) rightOperand).getName().equals(dest.getName()) && leftOperand.isLiteral() && Integer.parseInt(((LiteralElement) leftOperand).getLiteral()) == 1) {
                 int varNum = varTable.get(((Operand) rightOperand).getName()).getVirtualReg();
                 jasminAssign.append("iinc ").append(varNum).append(" 1");
-                updateStack(-1);
                 return jasminAssign;
             }
         }
