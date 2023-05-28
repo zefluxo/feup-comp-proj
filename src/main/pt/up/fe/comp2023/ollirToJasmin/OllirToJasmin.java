@@ -555,20 +555,7 @@ public class OllirToJasmin implements JasminBackend {
         jasminUnaryOper.append(operationToJasmin(operationType));
         updateStack(-1);
 
-        if (isBooleanOp) {
-            if (operationType == OperationType.NOTB) {
-                jasminUnaryOper.append(" FALSE").append(this.numberOfConditions).append("\n");
-                jasminUnaryOper.append("iconst_0\n");
-                updateStack(1);
-                jasminUnaryOper.append("goto END").append(this.numberOfConditions).append("\n");
-                jasminUnaryOper.append("FALSE").append(this.numberOfConditions).append(":\n");
-                jasminUnaryOper.append("iconst_1\n");
-                updateStack(1);
-                jasminUnaryOper.append("END").append(this.numberOfConditions).append(":");
-
-                this.numberOfConditions++;
-            } else jasminUnaryOper.append(getCondition());
-        }
+        if (isBooleanOp) jasminUnaryOper.append(getCondition());
 
         return jasminUnaryOper;
     }
@@ -617,12 +604,12 @@ public class OllirToJasmin implements JasminBackend {
 
     private StringBuilder getCondition() {
         StringBuilder condition = new StringBuilder();
-        condition.append(" FALSE").append(this.numberOfConditions).append("\n");
-        condition.append("iconst_1\n");
+        condition.append(" TRUE").append(this.numberOfConditions).append("\n");
+        condition.append("iconst_0\n");
         updateStack(1);
         condition.append("goto END").append(this.numberOfConditions).append("\n");
-        condition.append("FALSE").append(this.numberOfConditions).append(":\n");
-        condition.append("iconst_0\n");
+        condition.append("TRUE").append(this.numberOfConditions).append(":\n");
+        condition.append("iconst_1\n");
         updateStack(1);
         condition.append("END").append(this.numberOfConditions).append(":");
 
