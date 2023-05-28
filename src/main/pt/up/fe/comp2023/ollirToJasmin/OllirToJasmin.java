@@ -398,8 +398,8 @@ public class OllirToJasmin implements JasminBackend {
         if (invocationType == CallType.invokespecial) jasminCall.append("/<init>(");
         else if (invocationType != CallType.NEW) jasminCall.append("/").append(secondArg.getLiteral().replace("\"", "")).append("(");
         else {
-            jasminCall.append("\ndup");
-            updateStack(1);
+            //jasminCall.append("\ndup");
+            //updateStack(1);
         }
 
         if (listOfOperands != null) {
@@ -412,6 +412,8 @@ public class OllirToJasmin implements JasminBackend {
         updateStack(stackDiff);
 
         if (invocationType != CallType.NEW) jasminCall.append(")").append(typeToString(returnType));
+
+        if (returnType.getTypeOfElement() != ElementType.VOID) updateStack(1);
 
         return jasminCall;
     }
