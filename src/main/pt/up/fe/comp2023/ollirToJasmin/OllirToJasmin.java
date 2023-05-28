@@ -426,26 +426,28 @@ public class OllirToJasmin implements JasminBackend {
         List<Element> operands = instruction.getOperands();
         Element firstOp = operands.get(0);
         int currentStackLimit = this.stackLimit;
+        OperationType operationType;
 
         boolean firstIsZero = isZero(firstOp, varTable);
         StringBuilder firstOpString = toStack(firstOp, varTable);
 
         if (instruction instanceof OpCondInstruction) {
+            operationType = ((OpCondInstruction) instruction).getCondition().getOperation().getOpType();
             Element secondOp = operands.get(1);
 
             boolean secondIsZero = isZero(secondOp, varTable);
             StringBuilder secondOpString = toStack(secondOp, varTable);
 
             if (firstIsZero) {
-                jasminBranch.append(secondOpString).append("ifgt ");
+                jasminBranch.append(secondOpString).append("if").append(typeOfComparison(typeOfComparisonConverter(operationType))).append(" ");
                 if (this.stackLimit > currentStackLimit) this.stackLimit--;
                 updateStack(-2);
             } else if (secondIsZero) {
-                jasminBranch.append(firstOpString).append("igle ");
+                jasminBranch.append(firstOpString).append("if").append(typeOfComparison(operationType)).append(" ");
                 if (this.stackLimit > currentStackLimit) this.stackLimit--;
                 updateStack(-2);
             } else {
-                jasminBranch.append(firstOpString).append(secondOpString).append("if_icmplt ");
+                jasminBranch.append(firstOpString).append(secondOpString).append("if_icmp").append(typeOfComparison(operationType)).append(" ");
                 updateStack(-2);
             }
         } else if (instruction instanceof SingleOpCondInstruction) {
@@ -457,6 +459,51 @@ public class OllirToJasmin implements JasminBackend {
         jasminBranch.append(label);
 
         return jasminBranch;
+    }
+
+    private String typeOfComparison(OperationType operationType) {
+        switch (operationType) {
+
+            case LTH -> {
+                return "lt";
+            }
+            case GTH -> {
+                return "gt";
+            }
+            case EQ -> {
+                return "eq";
+            }
+            case NEQ -> {
+                return "ne";
+            }
+            case LTE -> {
+                return "le";
+            }
+            case GTE -> {
+                return "ge";
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + operationType);
+        }
+    }
+
+    private OperationType typeOfComparisonConverter(OperationType operationType) {
+        if (operationType == OperationType.EQ || operationType == OperationType.NEQ) return operationType;
+        switch (operationType) {
+
+            case LTH -> {
+                return OperationType.GTH;
+            }
+            case GTH -> {
+                return OperationType.LTH;
+            }
+            case LTE -> {
+                return OperationType.GTE;
+            }
+            case GTE -> {
+                return OperationType.LTE;
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + operationType);
+        }
     }
 
     private StringBuilder returnInstruction(ReturnInstruction instruction, HashMap<String, Descriptor> varTable) {
