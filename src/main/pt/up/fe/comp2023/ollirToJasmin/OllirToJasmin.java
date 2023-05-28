@@ -167,6 +167,8 @@ public class OllirToJasmin implements JasminBackend {
         Type returnType = ollirMethod.getReturnType();
         HashMap<String, Descriptor> varTable = ollirMethod.getVarTable();
         ArrayList<Instruction> listOfInstr = ollirMethod.getInstructions();
+        this.stackLimit = 0;
+        this.currentStack = 0;
 
         // Header
         if (isConstructMethod && methodAccessModifier == AccessModifiers.DEFAULT) {
@@ -373,14 +375,12 @@ public class OllirToJasmin implements JasminBackend {
             }
             case NEW -> {
                 if (firstArg.getType().getTypeOfElement() == ElementType.ARRAYREF) {
-                    updateStack(-1);
                     return jasminCall.append("newarray int");
                 }
                 jasminCall.append("new ");
                 stackDiff++;
             }
             case arraylength -> {
-                updateStack(-1);
                 return jasminCall.append("arraylength");
             }
             case ldc -> {
