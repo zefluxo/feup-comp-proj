@@ -202,6 +202,7 @@ public class OllirToJasmin implements JasminBackend {
             }
         }
         if (!hasReturn) jasminInstructions.append("return\n");
+        else if (returnType.getTypeOfElement() != ElementType.VOID) updateStack(-1);
 
         // Limits
         int localsLimit = Math.max(this.localRegisters.size(), paramList.size()+1);
@@ -380,7 +381,6 @@ public class OllirToJasmin implements JasminBackend {
                     return jasminCall.append("newarray int");
                 }
                 jasminCall.append("new ");
-                stackDiff++;
             }
             case arraylength -> {
                 return jasminCall.append("arraylength");
@@ -558,6 +558,7 @@ public class OllirToJasmin implements JasminBackend {
         updateStack(-1);
 
         if (isBooleanOp) jasminUnaryOper.append(getCondition());
+        else updateStack(1);
 
         return jasminUnaryOper;
     }
@@ -568,6 +569,9 @@ public class OllirToJasmin implements JasminBackend {
         Element rightOperand = instruction.getRightOperand();
         OperationType operationType = instruction.getOperation().getOpType();
         boolean isBooleanOp = instruction.getOperation().getTypeInfo().getTypeOfElement() == ElementType.BOOLEAN;
+        if (!isBooleanOp) {
+            isBooleanOp = operationType == OperationType.LTH || operationType == OperationType.LTE || operationType == OperationType.GTH || operationType == OperationType.GTE || operationType == OperationType.EQ || operationType == OperationType.NEQ;
+        }
         int currentStackLimit = this.stackLimit;
 
         boolean firstIsZero = isZero(leftOperand, varTable);
@@ -580,10 +584,12 @@ public class OllirToJasmin implements JasminBackend {
             jasminBinaryOper.append(firstOpString).append(secondOpString);
             jasminBinaryOper.append(operationToJasmin(operationType));
             updateStack(-2);
+            updateStack(1);
         } else {
             if (operationType == OperationType.ANDB) {
                 jasminBinaryOper.append(firstOpString).append(secondOpString).append("iand");
                 updateStack(-2);
+                updateStack(1);
             } else {
                 if (firstIsZero) {
                     jasminBinaryOper.append(secondOpString).append("ifgt");
@@ -608,12 +614,12 @@ public class OllirToJasmin implements JasminBackend {
         StringBuilder condition = new StringBuilder();
         condition.append(" TRUE").append(this.numberOfConditions).append("\n");
         condition.append("iconst_0\n");
-        updateStack(1);
         condition.append("goto END").append(this.numberOfConditions).append("\n");
         condition.append("TRUE").append(this.numberOfConditions).append(":\n");
         condition.append("iconst_1\n");
-        updateStack(1);
         condition.append("END").append(this.numberOfConditions).append(":");
+
+        updateStack(1);
 
         this.numberOfConditions++;
 
