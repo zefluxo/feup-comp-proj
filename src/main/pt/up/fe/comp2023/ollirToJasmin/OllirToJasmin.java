@@ -169,6 +169,8 @@ public class OllirToJasmin implements JasminBackend {
         ArrayList<Instruction> listOfInstr = ollirMethod.getInstructions();
         this.stackLimit = 0;
         this.currentStack = 0;
+        this.localRegisters = new HashSet<>();
+        updateRegisters(0);
 
         // Header
         if (isConstructMethod && methodAccessModifier == AccessModifiers.DEFAULT) {
@@ -202,7 +204,7 @@ public class OllirToJasmin implements JasminBackend {
         if (!hasReturn) jasminInstructions.append("return\n");
 
         // Limits
-        int localsLimit = this.localRegisters.size();
+        int localsLimit = Math.max(this.localRegisters.size(), paramList.size()+1);
         jasminMethod.append(".limit stack ").append(this.stackLimit).append('\n');
         jasminMethod.append(".limit locals ").append(localsLimit).append('\n');
 
@@ -302,12 +304,12 @@ public class OllirToJasmin implements JasminBackend {
 
             if (!leftOperand.isLiteral() && ((Operand) leftOperand).getName().equals(dest.getName()) && rightOperand.isLiteral() && Integer.parseInt(((LiteralElement) rightOperand).getLiteral()) == 1) {
                 int varNum = varTable.get(((Operand) leftOperand).getName()).getVirtualReg();
-                jasminAssign.append("iinc ").append(varNum).append(" 1\n");
+                jasminAssign.append("iinc ").append(varNum).append(" 1");
                 updateStack(-1);
                 return jasminAssign;
             } else if (!rightOperand.isLiteral() && ((Operand) rightOperand).getName().equals(dest.getName()) && leftOperand.isLiteral() && Integer.parseInt(((LiteralElement) leftOperand).getLiteral()) == 1) {
                 int varNum = varTable.get(((Operand) rightOperand).getName()).getVirtualReg();
-                jasminAssign.append("iinc ").append(varNum).append(" 1\n");
+                jasminAssign.append("iinc ").append(varNum).append(" 1");
                 updateStack(-1);
                 return jasminAssign;
             }
@@ -656,6 +658,7 @@ public class OllirToJasmin implements JasminBackend {
         String name = operand.getName();
         int varNum = varTable.get(name).getVirtualReg();
         ElementType type = operand.getType().getTypeOfElement();
+        if (operand instanceof ArrayOperand) type = ElementType.ARRAYREF;
         String isShort = " ";
 
         switch (type) {
