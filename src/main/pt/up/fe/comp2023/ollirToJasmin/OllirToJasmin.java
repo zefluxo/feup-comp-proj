@@ -302,13 +302,13 @@ public class OllirToJasmin implements JasminBackend {
             Element leftOperand = ((BinaryOpInstruction) rhs).getLeftOperand();
             Element rightOperand = ((BinaryOpInstruction) rhs).getRightOperand();
 
-            if (!leftOperand.isLiteral() && ((Operand) leftOperand).getName().equals(dest.getName()) && rightOperand.isLiteral() && Integer.parseInt(((LiteralElement) rightOperand).getLiteral()) == 1) {
+            if (!leftOperand.isLiteral() && ((Operand) leftOperand).getName().equals(dest.getName()) && rightOperand.isLiteral() && Integer.parseInt(((LiteralElement) rightOperand).getLiteral()) >= -128 && Integer.parseInt(((LiteralElement) rightOperand).getLiteral()) <= 127) {
                 int varNum = varTable.get(((Operand) leftOperand).getName()).getVirtualReg();
-                jasminAssign.append("iinc ").append(varNum).append(" 1");
+                jasminAssign.append("iinc ").append(varNum).append(" ").append(Integer.parseInt(((LiteralElement) rightOperand).getLiteral()));
                 return jasminAssign;
-            } else if (!rightOperand.isLiteral() && ((Operand) rightOperand).getName().equals(dest.getName()) && leftOperand.isLiteral() && Integer.parseInt(((LiteralElement) leftOperand).getLiteral()) == 1) {
+            } else if (!rightOperand.isLiteral() && ((Operand) rightOperand).getName().equals(dest.getName()) && leftOperand.isLiteral() && Integer.parseInt(((LiteralElement) leftOperand).getLiteral()) >= -128 && Integer.parseInt(((LiteralElement) leftOperand).getLiteral()) <= 127) {
                 int varNum = varTable.get(((Operand) rightOperand).getName()).getVirtualReg();
-                jasminAssign.append("iinc ").append(varNum).append(" 1");
+                jasminAssign.append("iinc ").append(varNum).append(" ").append(Integer.parseInt(((LiteralElement) leftOperand).getLiteral()));
                 return jasminAssign;
             }
         }
